@@ -4,6 +4,8 @@ const dotenv = require("dotenv");
 const userRoute = require("./routes/user");
 const productRoute = require("./routes/product");
 const authRoute = require("./routes/auth");
+const assetRoute = require("./routes/asset");
+const userAssetRoute = require("./routes/userAsset");
 const notFound = require("./middleware/notFound");
 const errorHandlerMiddleware = require("./middleware/errorHandler");
 const connectDB = require("./database/Connect");
@@ -19,6 +21,8 @@ dotenv.config();
 app.use("/api/v1/users", userRoute);
 app.use("/api/v1/auth", authRoute); 
 app.use("/api/v1/products", productRoute);
+app.use("/api/v1/assets", assetRoute); 
+app.use("/api/v1/userAssets", userAssetRoute);
 
 
 //middleware

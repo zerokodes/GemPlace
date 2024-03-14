@@ -1,4 +1,5 @@
 const Product = require("../models/Product");
+const User = require("../models/User");
 const asyncWrapper = require("../middleware/async");
 const { createCustomError } = require("../errors/customError");
 
@@ -9,9 +10,17 @@ const createProduct = asyncWrapper(async (req, res) => {
       productName: req.body.productName,
       price: req.body.price,
       imageLink: req.body.imageLink,
-      productDesc: req.body.productDesc
+      productDesc: req.body.productDesc,
+      color: req.body.color,
+      //removed once Security layer is added
+      user: req.body.user
     });
     const savedProduct= await newProduct.save();
+
+    const user = await User.findById({_id: savedProduct.user})
+      user.publishedProducts.push(savedProduct);
+      await user.save();
+
     res.status(201).json({ savedProduct});
   });
 

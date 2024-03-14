@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const validator = require('validator');
+const {Schema} = require('mongoose');
 
 const UserSchema = new mongoose.Schema(
     {
@@ -31,7 +32,15 @@ const UserSchema = new mongoose.Schema(
         address: { type: String},
         dateOfBirth: { type: Date},
         nationality: { type: String},
-        isVerified: { type: Boolean, default: false}
+        isVerified: { type: Boolean, default: false},
+        publishedProducts: [{
+            type: Schema.Types.ObjectId,
+            ref: 'Product'
+        }],
+        userAssets: [{
+            type: Schema.Types.ObjectId,
+            ref: 'UserAsset'
+        }]
     },
     { timestamps: true}
 );
