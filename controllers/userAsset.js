@@ -7,22 +7,34 @@ const Asset = require("../models/Asset");
 
 // CREATE a new UserAsset: Similar to buying an asset
 const createUserAsset = asyncWrapper(async (req, res) => {
+  const {asset} = req.body;
+ 
+    // Check if userAsset already exists with request user
+    const existingUserAssetByUserID = await UserAsset.findOne({ asset });
+
+    if ( existingUserAssetByUserID ){
+      if (existingUserAssetByUserID.user._id.toString() === req.user.id  ) {
+        return res.status(400).json({ message: `UserAsset already exists with this User: ${req.user.id}`  });
+      }
+    }
+    
+
     const newUserAsset = new UserAsset ({
-      //removed once Security layer is added
-      user: req.body.user,
-      asset: req.body.asset,
-      currentBalance: req.body.amount
+      user: req.user.id,
+      asset
     });
+
     const savedUserAsset= await newUserAsset.save();
 
     const user = await User.findById({_id: savedUserAsset.user})
       user.userAssets.push(savedUserAsset);
       await user.save();
 
-    const asset = await Asset.findById({_id: savedUserAsset.asset})
-      asset.userAssets.push(savedUserAsset);
-      await asset.save();
-
+    const saveAsset = await Asset.findById({_id: savedUserAsset.asset})
+      saveAsset.userAssets.push(savedUserAsset);
+      await saveAsset.save();
+      
+    
     res.status(201).json({ savedUserAsset});
   });
 
@@ -42,7 +54,18 @@ const getUserAsset = asyncWrapper(async (req, res, next) => {
     if (!userAsset) {
       return next(createCustomError(`No UserAsset found with id : ${userAssetID}`, 404));
     }
+
+    // check if it is the same user who created the userAsset or an Admin
+
+    const userId = req.user.id; // User ID from JWT token
+    const isAdmin = req.user.role === 'Admin';
+
+    
+    if (userId !== userAsset.user._id.toString() && !isAdmin){
+      return next(createCustomError(`You can't View this UserAsset : ${userAssetID}`, 403));
+    }
   
+    console.log(userAsset.user.currentBalance)
     res.status(200).json({ userAsset });
   });
 
@@ -104,6 +127,13 @@ const deleteUserAsset = asyncWrapper(async (req, res, next) => {
         if (!otherUserAsset) {
           return next(createCustomError(`No UserAsset found with id : ${otherUserAssetID}`, 404));
         }
+
+        //check if it is the same user who has the asset
+       const userID = req.user.id;
+       c
+       if (searchUserAsset.user._id.toString() !== userID && otherUserAsset.user._id.toString() !== userID){
+         return next(createCustomError(`You can not perform this operation`, 403));
+       }
         
         const asset = await Asset.findById({_id: searchUserAsset.asset})
 
@@ -153,6 +183,12 @@ const deleteUserAsset = asyncWrapper(async (req, res, next) => {
         return next(createCustomError(`No UserAsset found with id : ${otherUserAssetID}`, 404));
       }
       
+       //check if it is the same user who has the asset
+       const userID = req.user.id;
+       if (searchUserAsset.user._id.toString() !== userID && otherUserAsset.user._id.toString() !== userID){
+         return next(createCustomError(`You can not perform this operation`, 403));
+       }
+
       const asset = await Asset.findById({_id: otherUserAsset.asset})
 
       //conversion of usdt equivalent to otherUserAsset
@@ -180,21 +216,17 @@ const deleteUserAsset = asyncWrapper(async (req, res, next) => {
 
       // Share UserAsset amoung users
       const shareUserAsset = asyncWrapper(async (req, res, next) => {
-        // Search for sender
-        const { id: userID } = req.params;
-        let sender = await User.findOne({ _id: userID });
-
-        if (!sender) {
-          return next(createCustomError(`No user found with id : ${userID}`, 404));
-        }
-
-        //search for sender's asset to be sent
         const senderUserAssetID = req.body.senderUserAssetID
         let senderUserAsset = await UserAsset.findOne({ _id: senderUserAssetID });
 
         if (!senderUserAsset) {
           return next(createCustomError(`No UserAsset found with id : ${senderUserAssetID}`, 404));
         }
+
+        if (senderUserAsset.user._id.toString() !== req.user.id){
+          return next(createCustomError(`This asset does not belong to you`, 403))
+        }
+
 
         //Input amount to be sent
         const amount = req.body.amount;
@@ -203,7 +235,7 @@ const deleteUserAsset = asyncWrapper(async (req, res, next) => {
         }
 
         // Search for receiver
-        const receiverID = req.body.receiverID;
+        const {id: receiverID} = req.params;
         let receiver = await User.findOne({ _id: receiverID })
       
         if (!receiver) {
@@ -218,7 +250,11 @@ const deleteUserAsset = asyncWrapper(async (req, res, next) => {
           return next(createCustomError(`No UserAsset found with id : ${receiverUserAssetID}`, 404));
         }
 
-        if (!senderUserAsset.asset.equals(receiverUserAsset.asset) ){
+        if (receiverUserAsset.user._id.toString() !== receiverID){
+          return next(createCustomError(`This Asset does not belong to the receiver`, 403))
+        }
+
+        if (senderUserAsset.asset._id.toString() !== receiverUserAsset.asset._id.toString() ){
           return next(createCustomError(`Asset Address didn't match please input same asset type address`, 404));
         }
 
@@ -240,6 +276,12 @@ const deleteUserAsset = asyncWrapper(async (req, res, next) => {
   })
 
 
+      // Delete all User Assets
+const deleteAllUserAssets = asyncWrapper(async (req, res) => {
+  const userAssets = await UserAsset.deleteMany({});
+  res.status(200).json({ userAssets });
+});
+
   module.exports = {
     createUserAsset,
     getAllUserAssets,
@@ -248,5 +290,6 @@ const deleteUserAsset = asyncWrapper(async (req, res, next) => {
     deleteUserAsset,
     usdtToAsset,
     assetToUsdt,
-    shareUserAsset
+    shareUserAsset,
+    deleteAllUserAssets,
   };

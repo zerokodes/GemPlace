@@ -6,7 +6,7 @@ const UserAssetSchema = new mongoose.Schema(
     {
         currentBalance: {
             type: Number,
-            required: true
+            default: 0,
         },
         asset: {
             type: Schema.Types.ObjectId,
@@ -17,9 +17,14 @@ const UserAssetSchema = new mongoose.Schema(
             type: Schema.Types.ObjectId,
             ref: 'User',
             required: true
-        }
+        },
+        userStakePlans: [{
+            type: Schema.Types.ObjectId,
+            ref: 'UserStakePlan'
+        }],
     },
     { timestamps: true}
 )
+
 
 module.exports = mongoose.model("UserAsset", UserAssetSchema);

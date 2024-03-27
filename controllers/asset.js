@@ -5,10 +5,18 @@ const { createCustomError } = require("../errors/customError");
 
 // CREATE a new Asset
 const createAsset = asyncWrapper(async (req, res) => {
+
+  const { assetName, category, usdtEquivalent } = req.body;
+  // Check if Asset already exists
+  const existingAsset = await Asset.findOne({ assetName });
+  if (existingAsset) {
+    return res.status(400).json({ message: 'Asset already exists' });
+  }
+
     const newAsset = new Asset ({
-      assetName: req.body.assetName,
-      category: req.body.category,
-      usdtEquivalent: req.body.usdtEquivalent,
+      assetName,
+      category,
+      usdtEquivalent,
     });
     const savedAsset= await newAsset.save();
 
@@ -70,10 +78,19 @@ const deleteAsset = asyncWrapper(async (req, res, next) => {
   });
 
 
+    // Delete all Assets
+const deleteAllAssets = asyncWrapper(async (req, res) => {
+  const assets = await Asset.deleteMany({});
+  res.status(200).json({ assets });
+});
+
+
+
   module.exports = {
     createAsset,
     getAllAssets,
     getAsset,
     updateAsset,
     deleteAsset,
+    deleteAllAssets,
   };

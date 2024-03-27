@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const { authenticateUser, authorizeRole } = require("../middleware/security")
 
 const{
     createAsset,
@@ -7,10 +8,11 @@ const{
     getAsset,
     updateAsset,
     deleteAsset,
+    deleteAllAssets,
 } = require("../controllers/asset");
 
-router.route("/addAsset").post(createAsset);
-router.route("/").get(getAllAssets)
-router.route("/:id").get(getAsset).patch(updateAsset).delete(deleteAsset);
+router.route("/addAsset").post(authenticateUser, authorizeRole('Admin'), createAsset);
+router.route("/").get(authenticateUser,getAllAssets).delete(authenticateUser, authorizeRole('Admin'),deleteAllAssets);
+router.route("/:id").get(authenticateUser,getAsset).patch(authenticateUser, authorizeRole('Admin'),updateAsset).delete(authenticateUser, authorizeRole('Admin'),deleteAsset);
 
 module.exports = router;

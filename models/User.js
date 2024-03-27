@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const validator = require('validator');
 const {Schema} = require('mongoose');
 
+
 const UserSchema = new mongoose.Schema(
     {
         username: { type: String , required:[true,'Please tell us your username'], unique:true},
@@ -16,7 +17,7 @@ const UserSchema = new mongoose.Schema(
         role: {
             type: String,
             enum: ['Admin','Vendor','NormalUser'],
-            default: 'NormalUser'
+            default: 'NormalUser',
         },
         firstName: { type: String },
         surname: { type: String},
@@ -33,6 +34,7 @@ const UserSchema = new mongoose.Schema(
         dateOfBirth: { type: Date},
         nationality: { type: String},
         isVerified: { type: Boolean, default: false},
+        kycVerified: { type: Boolean, default: false},
         publishedProducts: [{
             type: Schema.Types.ObjectId,
             ref: 'Product'
@@ -40,9 +42,11 @@ const UserSchema = new mongoose.Schema(
         userAssets: [{
             type: Schema.Types.ObjectId,
             ref: 'UserAsset'
-        }]
+        }],
+    
     },
     { timestamps: true}
 );
+
 
 module.exports = mongoose.model("User", UserSchema);

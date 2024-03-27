@@ -13,7 +13,7 @@ const createProduct = asyncWrapper(async (req, res) => {
       productDesc: req.body.productDesc,
       color: req.body.color,
       //removed once Security layer is added
-      user: req.body.user
+      user: req.user.id
     });
     const savedProduct= await newProduct.save();
 
@@ -56,6 +56,16 @@ const updateProduct = asyncWrapper(async (req, res, next) => {
       return next(createCustomError(`No product found with id : ${productID}`, 404));
     }
     
+    // check if it is the same user who created the product or an Admin
+
+    const userId = req.user.id; // User ID from JWT token
+    const isAdmin = req.user.role === 'Admin';
+
+    
+    if (userId !== searchProduct.user._id.toString() && !isAdmin){
+      return next(createCustomError(`You can't modify this product : ${productID}`, 403));
+    }
+
     searchProduct = await Product.findOneAndUpdate({ _id: productID }, req.body, {
       new: true,
       runValidators: true,
@@ -73,12 +83,28 @@ const deleteProduct = asyncWrapper(async (req, res, next) => {
     if (!searchProduct) {
       return next(createCustomError(`No product found with id : ${productID}`, 404));
     }
+
+    // check if it is the same user who created the product or an Admin
+
+    const userId = req.user.id; // User ID from JWT token
+    const isAdmin = req.user.role === 'Admin';
    
+   
+    if (userId !== searchProduct.user._id.toString() && !isAdmin){
+      return next(createCustomError(`You can't delete this product : ${productID}`, 403));
+    }
+
     searchProduct = await Product.findOneAndDelete({ _id: productID });
   
     res.status(200).json({ searchProduct });
   });
 
+
+      // Delete all Products
+const deleteAllProducts = asyncWrapper(async (req, res) => {
+  const products = await Product.deleteMany({});
+  res.status(200).json({ products });
+});
 
   module.exports = {
     createProduct,
@@ -86,4 +112,5 @@ const deleteProduct = asyncWrapper(async (req, res, next) => {
     getProduct,
     updateProduct,
     deleteProduct,
+    deleteAllProducts,
   };
