@@ -30,8 +30,9 @@ UserStakePlanSchema.pre('save', function (next) {
       // Calculate endDate only if it's not already set
       const daysToAdd = this.numOfDays;
       const currentDate = new Date();
-      this.startDate = currentDate;
-      this.endDate = new Date(currentDate.getTime() + daysToAdd * 24 * 60 * 60 * 1000); // Calculate endDate based on daysToAdd
+      this.startDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate());
+      //this.endDate = new Date(currentDate.getTime() + daysToAdd * 24 * 60 * 60 * 1000); // Calculate endDate based on daysToAdd
+      this.endDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() + daysToAdd);
     }
     next();
   });

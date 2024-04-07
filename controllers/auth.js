@@ -29,10 +29,8 @@ const nodemailer = require('nodemailer');
         ).toString(),
       role,
     });
-    //await newUser.save();
+    
 
-
-console.log("Email don start")
     // Create a nodemailer transporter
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
@@ -44,12 +42,11 @@ const transporter = nodemailer.createTransport({
 });
 
 
-console.log("token things")
  // Generate verification token (you can use crypto or uuid package)
  const randomBytes = CryptoJS.lib.WordArray.random(16);
  const token = CryptoJS.enc.Hex.stringify(randomBytes);
 
- console.log("i wan send mail")
+ 
  // Send verification email
  const mailOptions = {
   from: process.env.SMTP_USER,
@@ -77,6 +74,11 @@ res.status(201).json({ message: 'User registered successfully. Check your email 
     
     if(originalPassword !== req.body.password){
         return next(createCustomError("Wrong Credentials", 401));
+    }
+
+    // Check if user has verified email
+    if (user.isVerified === false){
+      return next(createCustomError("Please verify your email address", 401));
     }
 
     //Assigning token to users

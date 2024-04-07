@@ -69,11 +69,14 @@ const stake = asyncWrapper(async (req, res, next) => {
   });
 
 
+  
+  //returns stake after staking period is completed
   const returnStake = asyncWrapper(async (req,res,next) =>{
     const currentDate = new Date();
+    const currentDateSeparator = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate());
 
-    const expiredUserStakePlans = await UserStakePlan.find({ endDate: { $lt: currentDate } });
-    console.log(currentDate)
+
+    const expiredUserStakePlans = await UserStakePlan.find({ endDate: { $lt: currentDateSeparator } });
     if (!expiredUserStakePlans){
         return next(createCustomError(`No UserStake Plan found or is expired`, 404));
     }
@@ -81,7 +84,6 @@ const stake = asyncWrapper(async (req, res, next) => {
     for (const userStakePlan of expiredUserStakePlans) {
       // Call your processing function for each expired document
       const { userAssetID, expectedReturnAmount } = userStakePlan;
-      console.log(userAssetID, expectedReturnAmount)
       const userAsset = await UserAsset.findOneAndUpdate({ _id: userAssetID }, {$inc: {currentBalance: +expectedReturnAmount}}, {
         new: true,
         runValidators: true,
