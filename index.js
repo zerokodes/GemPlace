@@ -11,6 +11,7 @@ const userStakePlanRoute = require("./routes/userStakePlan");
 const notFound = require("./middleware/notFound");
 const errorHandlerMiddleware = require("./middleware/errorHandler");
 const connectDB = require("./database/Connect");
+const cors = require('cors')
 
 const schedule = require('node-schedule');
 const UserStakePlan = require("./models/UserStakePlan");
@@ -20,6 +21,9 @@ const{
 
 
 app.use(express.json());
+app.use(cors({
+  origin: [process.env.CORS_URL1, process.env.CORS_URL2]
+}))
 
 dotenv.config();
 
