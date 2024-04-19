@@ -19,20 +19,22 @@ const UserSchema = new mongoose.Schema(
             enum: ['Admin','Vendor','NormalUser'],
             default: 'NormalUser',
         },
-        firstName: { type: String },
-        surname: { type: String},
+        firstName: { type: String, default: null},
+        surname: { type: String, default: null},
         phone: { 
             type: Number,
             maxLength:[11, "Number can't be more than 11 digit"],
             minLength:[11, "Number can't be less than 11 digit"],
+            default: null
             },
         gender: {
             type: String,
             enum: ["Male","Female"],
+            default: null
         },
-        address: { type: String},
-        dateOfBirth: { type: Date},
-        nationality: { type: String},
+        address: { type: String, default: null},
+        dateOfBirth: { type: Date, default: null},
+        nationality: { type: String, default: null},
         isVerified: { type: Boolean, default: false},
         kycVerified: { type: Boolean, default: false},
         publishedProducts: [{

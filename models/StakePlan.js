@@ -15,9 +15,9 @@ const StakePlanSchema = new mongoose.Schema(
             ref: 'UserStakePlan'
         }],
 
-        startDate: {type: Date },
+        startDate: {type: Date, default: null },
 
-        endDate: {type: Date }
+        endDate: {type: Date, default: null}
 
     },
     { timestamps: true }

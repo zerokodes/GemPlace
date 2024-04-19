@@ -92,7 +92,11 @@ res.status(201).json({ message: 'User registered successfully. Check your email 
 
     //decouple data inorder to send other user details except password
     const { password, ...others } = user._doc;
-    res.status(200).json({...others, accessToken});
+    const data = {
+        details: { ...others },
+        token: accessToken
+    }
+    res.status(200).json({success: true, message: "Login successful", data})
 
 });
 

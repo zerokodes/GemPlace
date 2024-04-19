@@ -29,7 +29,11 @@ const createProduct = asyncWrapper(async (req, res) => {
 // GET all products
 const getAllProducts = asyncWrapper(async (req, res) => {
     const products = await Product.find({});
-    res.status(200).json({ products });
+    const data =  [{
+      products
+  }]
+  res.status(200).json({ success: true, data });
+    //res.status(200).json({ products });
   });
 
 

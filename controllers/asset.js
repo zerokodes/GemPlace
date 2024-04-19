@@ -20,14 +20,18 @@ const createAsset = asyncWrapper(async (req, res) => {
     });
     const savedAsset= await newAsset.save();
 
-    res.status(201).json({ savedAsset});
+    res.status(201).json({message: "Asset created successfully"});
   });
 
 
   // GET all Assets
 const getAllAssets = asyncWrapper(async (req, res) => {
     const assets = await Asset.find({});
-    res.status(200).json({ assets });
+    //const { resource} = assets._doc;
+    const data =  [{
+        assets
+    }]
+    res.status(200).json({ success: true, data });
   });
 
 
@@ -39,7 +43,6 @@ const getAsset = asyncWrapper(async (req, res, next) => {
     if (!asset) {
       return next(createCustomError(`No Asset found with id : ${assetID}`, 404));
     }
-  
     res.status(200).json({ asset });
   });
 

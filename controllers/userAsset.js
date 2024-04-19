@@ -130,7 +130,6 @@ const deleteUserAsset = asyncWrapper(async (req, res, next) => {
 
         //check if it is the same user who has the asset
        const userID = req.user.id;
-       c
        if (searchUserAsset.user._id.toString() !== userID && otherUserAsset.user._id.toString() !== userID){
          return next(createCustomError(`You can not perform this operation`, 403));
        }
@@ -282,6 +281,71 @@ const deleteAllUserAssets = asyncWrapper(async (req, res) => {
   res.status(200).json({ userAssets });
 });
 
+
+//get all userAssets belonging to a user
+const getUserAssets = asyncWrapper(async (req,res, next) => {
+  const { id: userID } = req.params;
+  //const userID = req.user.id
+    let searchUser = await User.findOne({ _id: userID });
+   
+    if (!searchUser) {
+      return next(createCustomError(`No user found with id : ${userID}`, 404));
+    }
+
+     //check if it is the same user making the request
+      if (searchUser._id.toString() !== req.user.id){
+       return next(createCustomError(`You can not perform this operation`, 403));
+     }
+
+     const assets = searchUser.userAssets;
+
+     // Initialize an empty array to store asset results
+    let assetDetails = [];
+
+     // Loop through the user's assets and save them in the assetResults array
+     for (const asset of assets) {
+      const searchUserAsset = await UserAsset.findOne({ _id: asset });
+      if (!searchUserAsset) {
+        return next(createCustomError(`No UserAsset found with id : ${asset}`, 404));
+      }
+
+      const assetID = searchUserAsset.asset;
+
+      const searchAsset = await Asset.findOne({_id: assetID})
+
+      if (!searchAsset) {
+        return next(createCustomError(`No Asset found with id : ${assetID}`, 404));
+      }
+
+      const userID = searchUserAsset.user;
+      const searchUser = await User.findOne({_id: userID})
+
+      if (!searchUser) {
+        return next(createCustomError(`No user found with id : ${userID}`, 404));
+      }
+
+      assetDetails.push({
+        id: searchUserAsset._id,
+        currentBalance: searchUserAsset.currentBalance,
+        AssetDetails: [{
+          id: searchAsset._id,
+          assetName: searchAsset.assetName
+        }],
+        UserDetails: [{
+          id: searchUser._id,
+          email: searchUser.email
+        }],
+        // Include other asset fields as needed
+      });
+    }
+    const responseData = {
+      data:{assetDetails}
+    }
+    //res.status(200).json(assets)
+    res.status(200).json({success: true, responseData})
+
+})
+
   module.exports = {
     createUserAsset,
     getAllUserAssets,
@@ -292,4 +356,5 @@ const deleteAllUserAssets = asyncWrapper(async (req, res) => {
     assetToUsdt,
     shareUserAsset,
     deleteAllUserAssets,
+    getUserAssets,
   };
