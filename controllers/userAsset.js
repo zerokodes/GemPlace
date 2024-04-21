@@ -215,6 +215,7 @@ const deleteUserAsset = asyncWrapper(async (req, res, next) => {
 
       // Share UserAsset amoung users
       const shareUserAsset = asyncWrapper(async (req, res, next) => {
+        console.log("O set ti go")
         const senderUserAssetID = req.body.senderUserAssetID
         let senderUserAsset = await UserAsset.findOne({ _id: senderUserAssetID });
 
@@ -226,7 +227,7 @@ const deleteUserAsset = asyncWrapper(async (req, res, next) => {
           return next(createCustomError(`This asset does not belong to you`, 403))
         }
 
-
+    
         //Input amount to be sent
         const amount = req.body.amount;
         if(amount > senderUserAsset.currentBalance ){
@@ -234,12 +235,13 @@ const deleteUserAsset = asyncWrapper(async (req, res, next) => {
         }
 
         // Search for receiver
-        const {id: receiverID} = req.params;
-        let receiver = await User.findOne({ _id: receiverID })
+        const {username: receiverUsername} = req.params;
+        let receiver = await User.findOne({ username: receiverUsername })
       
         if (!receiver) {
-          return next(createCustomError(`No User found with id : ${receiverID}`, 404));
+          return next(createCustomError(`No User found with username : ${receiverUsername}`, 404));
         }
+
 
         //search for receiver's asset to be sent
         const receiverUserAssetID = req.body.receiverUserAssetID
@@ -249,7 +251,7 @@ const deleteUserAsset = asyncWrapper(async (req, res, next) => {
           return next(createCustomError(`No UserAsset found with id : ${receiverUserAssetID}`, 404));
         }
 
-        if (receiverUserAsset.user._id.toString() !== receiverID){
+        if (receiverUserAsset.user._id.toString() !== receiver._id.toString()){
           return next(createCustomError(`This Asset does not belong to the receiver`, 403))
         }
 
