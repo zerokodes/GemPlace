@@ -6,6 +6,7 @@ const { createCustomError } = require("../errors/customError");
 
 // CREATE a new product
 const createProduct = asyncWrapper(async (req, res) => {
+
     const newProduct = new Product ({
       productName: req.body.productName,
       price: req.body.price,
@@ -21,7 +22,7 @@ const createProduct = asyncWrapper(async (req, res) => {
       user.publishedProducts.push(savedProduct);
       await user.save();
 
-    res.status(201).json({ savedProduct});
+    res.status(201).json({ savedProduct });
   });
 
 

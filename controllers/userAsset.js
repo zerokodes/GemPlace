@@ -235,12 +235,12 @@ const deleteUserAsset = asyncWrapper(async (req, res, next) => {
         }
 
         // Search for receiver
-        const {username: receiverUsername} = req.params;
+       /**  const {username: receiverUsername} = req.params;
         let receiver = await User.findOne({ username: receiverUsername })
       
         if (!receiver) {
           return next(createCustomError(`No User found with username : ${receiverUsername}`, 404));
-        }
+        }**/
 
 
         //search for receiver's asset to be sent
@@ -251,9 +251,9 @@ const deleteUserAsset = asyncWrapper(async (req, res, next) => {
           return next(createCustomError(`No UserAsset found with id : ${receiverUserAssetID}`, 404));
         }
 
-        if (receiverUserAsset.user._id.toString() !== receiver._id.toString()){
+        /**if (receiverUserAsset.user._id.toString() !== receiver._id.toString()){
           return next(createCustomError(`This Asset does not belong to the receiver`, 403))
-        }
+        }**/
 
         if (senderUserAsset.asset._id.toString() !== receiverUserAsset.asset._id.toString() ){
           return next(createCustomError(`Asset Address didn't match please input same asset type address`, 404));

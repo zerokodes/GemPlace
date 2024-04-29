@@ -11,7 +11,7 @@ const{
     deleteAllProducts,
 } = require("../controllers/product");
 
-router.route("/addProduct").post(authenticateUser, authorizeRole('Vendor'),createProduct);
+router.route("/addProduct").post(authenticateUser,authorizeRole('Vendor'),createProduct);
 router.route("/").get(authenticateUser,getAllProducts).delete(authenticateUser, authorizeRole('Admin'),deleteAllProducts)
 router.route("/:id").get(authenticateUser,getProduct).patch(authenticateUser, authorizeRole(['Admin', 'Vendor']),updateProduct).delete(authenticateUser, authorizeRole(['Admin', 'Vendor']),deleteProduct);
 

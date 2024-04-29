@@ -18,9 +18,9 @@ const{
 router.route("/addUserAsset").post(authenticateUser,createUserAsset);
 router.route("/").get(authenticateUser,authorizeRole('Admin'),getAllUserAssets).delete(authenticateUser, authorizeRole('Admin'),deleteAllUserAssets)
 router.route("/:id").get(authenticateUser,getUserAssets).patch(authenticateUser, authorizeRole('Admin'),topUpUserAsset).delete(authenticateUser, authorizeRole('Admin'),deleteUserAsset);
+router.route("/shareUserAsset").post(authenticateUser, shareUserAsset);
 router.route("/convertFromUsdt/:id").patch(authenticateUser,usdtToAsset);
 router.route("/convertToUsdt/:id").patch(authenticateUser,assetToUsdt);
-router.route("/shareUserAsset/:username").patch(authenticateUser,shareUserAsset);
 router.route("/allUserAssets").get(authenticateUser, getUserAssets);
 
 module.exports = router;
