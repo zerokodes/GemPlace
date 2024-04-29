@@ -215,7 +215,6 @@ const deleteUserAsset = asyncWrapper(async (req, res, next) => {
 
       // Share UserAsset amoung users
       const shareUserAsset = asyncWrapper(async (req, res, next) => {
-        console.log("O set ti go")
         const senderUserAssetID = req.body.senderUserAssetID
         let senderUserAsset = await UserAsset.findOne({ _id: senderUserAssetID });
 
