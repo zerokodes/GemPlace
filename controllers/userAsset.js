@@ -247,7 +247,8 @@ const deleteUserAsset = asyncWrapper(async (req, res, next) => {
         let receiverUserAsset = await UserAsset.findOne({ _id: receiverUserAssetID });
 
         if (!receiverUserAsset) {
-          return next(createCustomError(`No UserAsset found with id : ${receiverUserAssetID}`, 200));
+          res.status(200).json({success: false, message: `No UserAsset found with id : ${receiverUserAssetID}`, data: null, code: 200, error: err.message})
+          //return next(createCustomError(`No UserAsset found with id : ${receiverUserAssetID}`, 200));
         }
 
         /**if (receiverUserAsset.user._id.toString() !== receiver._id.toString()){
@@ -271,12 +272,11 @@ const deleteUserAsset = asyncWrapper(async (req, res, next) => {
           runValidators: true,
         });
 
-
         const data = {
-          senderUserAsset,
-          receiverUserAsset
+          amount
       }
-      res.status(200).json({success: true, message: "UserAsset shared succefully", data, code: 200, error: null})
+
+      res.status(200).json({success: true, message: "UserAsset shared succefully", data , code: 200, error: null})
         //rsres.status(200).json({ senderUserAsset, receiverUserAsset });
 
   })
