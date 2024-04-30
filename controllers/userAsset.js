@@ -219,18 +219,18 @@ const deleteUserAsset = asyncWrapper(async (req, res, next) => {
         let senderUserAsset = await UserAsset.findOne({ _id: senderUserAssetID });
 
         if (!senderUserAsset) {
-          return next(createCustomError(`No UserAsset found with id : ${senderUserAssetID}`, 404));
+          return next(createCustomError(`No UserAsset found with id : ${senderUserAssetID}`, 200));
         }
 
         if (senderUserAsset.user._id.toString() !== req.user.id){
-          return next(createCustomError(`This asset does not belong to you`, 403))
+          return next(createCustomError(`This asset does not belong to you`, 200))
         }
 
     
         //Input amount to be sent
         const amount = req.body.amount;
         if(amount > senderUserAsset.currentBalance ){
-          return next(createCustomError(`Insufficient Balance`, 404));
+          return next(createCustomError(`Insufficient Balance`, 200));
         }
 
         // Search for receiver
@@ -247,7 +247,7 @@ const deleteUserAsset = asyncWrapper(async (req, res, next) => {
         let receiverUserAsset = await UserAsset.findOne({ _id: receiverUserAssetID });
 
         if (!receiverUserAsset) {
-          return next(createCustomError(`No UserAsset found with id : ${receiverUserAssetID}`, 404));
+          return next(createCustomError(`No UserAsset found with id : ${receiverUserAssetID}`, 200));
         }
 
         /**if (receiverUserAsset.user._id.toString() !== receiver._id.toString()){
@@ -255,7 +255,7 @@ const deleteUserAsset = asyncWrapper(async (req, res, next) => {
         }**/
 
         if (senderUserAsset.asset._id.toString() !== receiverUserAsset.asset._id.toString() ){
-          return next(createCustomError(`Asset Address didn't match please input same asset type address`, 404));
+          return next(createCustomError(`Asset Address didn't match please input same asset type address`, 200));
         }
 
         //deduct amount from sender's userAsset
@@ -271,7 +271,13 @@ const deleteUserAsset = asyncWrapper(async (req, res, next) => {
           runValidators: true,
         });
 
-        res.status(200).json({ senderUserAsset, receiverUserAsset });
+
+        const data = {
+          senderUserAsset,
+          receiverUserAsset
+      }
+      res.status(200).json({success: true, message: "UserAsset shared succefully", data, code: 200, error: null})
+        //rsres.status(200).json({ senderUserAsset, receiverUserAsset });
 
   })
 
