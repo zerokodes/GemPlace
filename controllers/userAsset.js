@@ -246,9 +246,8 @@ const deleteUserAsset = asyncWrapper(async (req, res, next) => {
         const receiverUserAssetID = req.body.receiverUserAssetID
         let receiverUserAsset = await UserAsset.findOne({ _id: receiverUserAssetID });
 
-        if (!receiverUserAsset) {
-          res.status(200).json({success: false, message: `No UserAsset found with id : ${receiverUserAssetID}`, data: null, code: 200, error: err.message})
-          //return next(createCustomError(`No UserAsset found with id : ${receiverUserAssetID}`, 200));
+        if (receiverUserAsset === null) {
+          return next(createCustomError(`No UserAsset found with id : ${receiverUserAssetID}`, 200));
         }
 
         /**if (receiverUserAsset.user._id.toString() !== receiver._id.toString()){
@@ -276,7 +275,7 @@ const deleteUserAsset = asyncWrapper(async (req, res, next) => {
           amount
       }
 
-      res.status(200).json({success: true, message: "UserAsset shared succefully", data , code: 200, error: null})
+      res.status(200).json({success: true, message: "UserAsset shared succefully", data , code: 200})
         //rsres.status(200).json({ senderUserAsset, receiverUserAsset });
 
   })
@@ -336,7 +335,8 @@ const getUserAssets = asyncWrapper(async (req,res, next) => {
         currentBalance: searchUserAsset.currentBalance,
         AssetDetails: [{
           id: searchAsset._id,
-          assetName: searchAsset.assetName
+          assetName: searchAsset.assetName,
+          usdtEquivalent: searchAsset.usdtEquivalent
         }],
         UserDetails: [{
           id: searchUser._id,

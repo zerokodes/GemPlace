@@ -63,7 +63,7 @@ res.status(201).json({ message: 'User registered successfully. Check your email 
   const loginUser = asyncWrapper(async (req, res, next) => {
     const user = await User.findOne({ email: req.body.email});
     if (!user) {
-        return next(createCustomError("Wrong Crendentials", 401));
+        return next(createCustomError("Wrong Crendentials", 200));
       }
     
     const hashedPassword = CryptoJS.AES.decrypt(
@@ -73,12 +73,12 @@ res.status(201).json({ message: 'User registered successfully. Check your email 
     const originalPassword = hashedPassword.toString(CryptoJS.enc.Utf8);
     
     if(originalPassword !== req.body.password){
-        return next(createCustomError("Wrong Credentials", 401));
+        return next(createCustomError("Wrong Credentials", 200));
     }
 
     // Check if user has verified email
     if (user.isVerified === false){
-      return next(createCustomError("Please verify your email address", 401));
+      return next(createCustomError("Please verify your email address", 200));
     }
 
     //Assigning token to users
@@ -96,7 +96,7 @@ res.status(201).json({ message: 'User registered successfully. Check your email 
         details: { ...others },
         token: accessToken
     }
-    res.status(200).json({success: true, message: "Login successful", data})
+    res.status(200).json({success: true, message: "Login successful", data, code:200})
 
 });
 
@@ -105,9 +105,9 @@ const verifyEmail = asyncWrapper(async (req,res,next) => {
     // Find user by token and update isVerified field
     const user = await User.findOneAndUpdate({ isVerified: false }, { isVerified: true });
     if (!user) {
-      return next(createCustomError("User not found or already verified", 404));
+      return next(createCustomError("User not found or already verified", 200));
     }
-    res.status(200).json({message: "Email is Successfully Verified"});
+    res.status(200).json({success: true, message: "Email is Successfully Verified", code:200});
 })
 
 module.exports = {
