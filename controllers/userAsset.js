@@ -3,6 +3,7 @@ const asyncWrapper = require("../middleware/async");
 const { createCustomError } = require("../errors/customError");
 const User = require("../models/User");
 const Asset = require("../models/Asset");
+const mongoose = require('mongoose');
 
 
 // CREATE a new UserAsset: Similar to buying an asset
@@ -14,7 +15,8 @@ const createUserAsset = asyncWrapper(async (req, res) => {
 
     if ( existingUserAssetByUserID ){
       if (existingUserAssetByUserID.user._id.toString() === req.user.id  ) {
-        return res.status(400).json({ message: `UserAsset already exists with this User: ${req.user.id}`  });
+        return next(createCustomError(`UserAsset already exists with this User: ${req.user.id}`, 200));
+        //return res.status(200).json({ message: `UserAsset already exists with this User: ${req.user.id}`  });
       }
     }
     
@@ -49,10 +51,15 @@ const getAllUserAssets = asyncWrapper(async (req, res) => {
      //GET a UserAsset
 const getUserAsset = asyncWrapper(async (req, res, next) => {
     const { id: userAssetID } = req.params;
-    const userAsset = await UserAsset.findOne({ _id: userAssetID });
+
+    if (!mongoose.Types.ObjectId.isValid(userAssetID)) {
+      return next(createCustomError("Invalid Id format", 200));
+    }
   
+    const userAsset = await UserAsset.findOne({ _id: userAssetID });
+
     if (!userAsset) {
-      return next(createCustomError(`No UserAsset found with id : ${userAssetID}`, 404));
+      return next(createCustomError(`No UserAsset found with id : ${userAssetID}`, 200));
     }
 
     // check if it is the same user who created the userAsset or an Admin
@@ -62,10 +69,10 @@ const getUserAsset = asyncWrapper(async (req, res, next) => {
 
     
     if (userId !== userAsset.user._id.toString() && !isAdmin){
-      return next(createCustomError(`You can't View this UserAsset : ${userAssetID}`, 403));
+      return next(createCustomError(`You can't View this UserAsset : ${userAssetID}`, 200));
     }
   
-    console.log(userAsset.user.currentBalance)
+    //console.log(userAsset.user.currentBalance)
     res.status(200).json({ userAsset });
   });
 
@@ -73,10 +80,19 @@ const getUserAsset = asyncWrapper(async (req, res, next) => {
    // UPDATE a  UserAsset: Similar to Top up UserAsset
 const topUpUserAsset = asyncWrapper(async (req, res, next) => {
     const { id: userAssetID } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(userAssetID)) {
+      return next(createCustomError("Invalid Id format", 200));
+    }
+   
     let searchUserAsset = await UserAsset.findOne({ _id: userAssetID });
+
+    if (!mongoose.Types.ObjectId.isValid(userAssetID)) {
+      return next(createCustomError("Invalid Id format", 200));
+    }
    
     if (!searchUserAsset) {
-      return next(createCustomError(`No UserAsset found with id : ${userAssetID}`, 404));
+      return next(createCustomError(`No UserAsset found with id : ${userAssetID}`, 200));
     }
     
     // amount to be added
@@ -93,10 +109,15 @@ const topUpUserAsset = asyncWrapper(async (req, res, next) => {
 
 const deleteUserAsset = asyncWrapper(async (req, res, next) => {
     const { id: userAssetID } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(userAssetID)) {
+      return next(createCustomError("Invalid Id format", 200));
+    }
+   
     let searchUserAsset = await UserAsset.findOne({ _id: userAssetID });
    
     if (!searchUserAsset) {
-      return next(createCustomError(`No UserAsset found with id : ${userAssetID}`, 404));
+      return next(createCustomError(`No UserAsset found with id : ${userAssetID}`, 200));
     }
    
     searchUserAsset = await UserAsset.findOneAndDelete({ _id: userAssetID });
@@ -109,29 +130,39 @@ const deleteUserAsset = asyncWrapper(async (req, res, next) => {
     // Conversion from USDT to other assets
     const assetToUsdt = asyncWrapper(async (req, res, next) => {
         const { id: userAssetID } = req.params;
-        let searchUserAsset = await UserAsset.findOne({ _id: userAssetID });
+
+        if (!mongoose.Types.ObjectId.isValid(userAssetID)) {
+          return next(createCustomError("Invalid Id format", 200));
+        }
         
+        let searchUserAsset = await UserAsset.findOne({ _id: userAssetID });
+
         if (!searchUserAsset) {
-          return next(createCustomError(`No UserAsset found with id : ${userAssetID}`, 404));
+          return next(createCustomError(`No UserAsset found with id : ${userAssetID}`, 200));
         }
 
         const amount = req.body.amount;
         if(amount > searchUserAsset.currentBalance ){
-          return next(createCustomError(`Insufficient Balance`, 404));
+          return next(createCustomError(`Insufficient Balance`, 200));
         }
 
         //The Usdt Asset
         const otherUserAssetID = req.body.otherUserAssetID
+
+        if (!mongoose.Types.ObjectId.isValid(otherUserAssetID)) {
+          return next(createCustomError("Invalid Id format", 200));
+        }
+
         let otherUserAsset = await UserAsset.findOne({ _id: otherUserAssetID });
 
         if (!otherUserAsset) {
-          return next(createCustomError(`No UserAsset found with id : ${otherUserAssetID}`, 404));
+          return next(createCustomError(`No UserAsset found with id : ${otherUserAssetID}`, 200));
         }
 
         //check if it is the same user who has the asset
        const userID = req.user.id;
        if (searchUserAsset.user._id.toString() !== userID && otherUserAsset.user._id.toString() !== userID){
-         return next(createCustomError(`You can not perform this operation`, 403));
+         return next(createCustomError(`You can not perform this operation`, 200));
        }
         
         const asset = await Asset.findById({_id: searchUserAsset.asset})
@@ -163,29 +194,39 @@ const deleteUserAsset = asyncWrapper(async (req, res, next) => {
     //convert from other asset to usdt
     const usdtToAsset = asyncWrapper(async (req, res, next) => {
       const { id: userAssetID } = req.params;
+
+      if (!mongoose.Types.ObjectId.isValid(userAssetID)) {
+        return next(createCustomError("Invalid Id format", 200));
+      }
+
       let searchUserAsset = await UserAsset.findOne({ _id: userAssetID });
       
       if (!searchUserAsset) {
-        return next(createCustomError(`No UserAsset found with id : ${userAssetID}`, 404));
+        return next(createCustomError(`No UserAsset found with id : ${userAssetID}`, 200));
       }
 
       const amount = req.body.amount;
       if(amount > searchUserAsset.currentBalance ){
-        return next(createCustomError(`Insufficient Balance`, 404));
+        return next(createCustomError(`Insufficient Balance`, 200));
       }
 
       
       const otherUserAssetID = req.body.otherUserAssetID
+
+      if (!mongoose.Types.ObjectId.isValid(otherUserAssetID)) {
+        return next(createCustomError("Invalid Id format", 200));
+      }
+
       let otherUserAsset = await UserAsset.findOne({ _id: otherUserAssetID });
 
       if (!otherUserAsset) {
-        return next(createCustomError(`No UserAsset found with id : ${otherUserAssetID}`, 404));
+        return next(createCustomError(`No UserAsset found with id : ${otherUserAssetID}`, 200));
       }
       
        //check if it is the same user who has the asset
        const userID = req.user.id;
        if (searchUserAsset.user._id.toString() !== userID && otherUserAsset.user._id.toString() !== userID){
-         return next(createCustomError(`You can not perform this operation`, 403));
+         return next(createCustomError(`You can not perform this operation`, 200));
        }
 
       const asset = await Asset.findById({_id: otherUserAsset.asset})
@@ -216,6 +257,11 @@ const deleteUserAsset = asyncWrapper(async (req, res, next) => {
       // Share UserAsset amoung users
       const shareUserAsset = asyncWrapper(async (req, res, next) => {
         const senderUserAssetID = req.body.senderUserAssetID
+
+        if (!mongoose.Types.ObjectId.isValid(senderUserAssetID)) {
+          return next(createCustomError("Invalid Id format", 200));
+        }
+
         let senderUserAsset = await UserAsset.findOne({ _id: senderUserAssetID });
 
         if (!senderUserAsset) {
@@ -233,20 +279,17 @@ const deleteUserAsset = asyncWrapper(async (req, res, next) => {
           return next(createCustomError(`Insufficient Balance`, 200));
         }
 
-        // Search for receiver
-       /**  const {username: receiverUsername} = req.params;
-        let receiver = await User.findOne({ username: receiverUsername })
-      
-        if (!receiver) {
-          return next(createCustomError(`No User found with username : ${receiverUsername}`, 404));
-        }**/
-
 
         //search for receiver's asset to be sent
         const receiverUserAssetID = req.body.receiverUserAssetID
+
+        if (!mongoose.Types.ObjectId.isValid(receiverUserAssetID)) {
+          return next(createCustomError("Invalid Id format", 200));
+        }
+        
         let receiverUserAsset = await UserAsset.findOne({ _id: receiverUserAssetID });
 
-        if (receiverUserAsset === null) {
+        if (!receiverUserAsset) {
           return next(createCustomError(`No UserAsset found with id : ${receiverUserAssetID}`, 200));
         }
 
@@ -291,16 +334,21 @@ const deleteAllUserAssets = asyncWrapper(async (req, res) => {
 //get all userAssets belonging to a user
 const getUserAssets = asyncWrapper(async (req,res, next) => {
   const { id: userID } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(userID)) {
+    return next(createCustomError("Invalid Id format", 200));
+  }
   //const userID = req.user.id
     let searchUser = await User.findOne({ _id: userID });
    
+
     if (!searchUser) {
-      return next(createCustomError(`No user found with id : ${userID}`, 404));
+      return next(createCustomError(`No user found with id : ${userID}`, 200));
     }
 
      //check if it is the same user making the request
       if (searchUser._id.toString() !== req.user.id){
-       return next(createCustomError(`You can not perform this operation`, 403));
+       return next(createCustomError(`You can not perform this operation`, 200));
      }
 
      const assets = searchUser.userAssets;
@@ -312,7 +360,7 @@ const getUserAssets = asyncWrapper(async (req,res, next) => {
      for (const asset of assets) {
       const searchUserAsset = await UserAsset.findOne({ _id: asset });
       if (!searchUserAsset) {
-        return next(createCustomError(`No UserAsset found with id : ${asset}`, 404));
+        return next(createCustomError(`No UserAsset found with id : ${asset}`, 200));
       }
 
       const assetID = searchUserAsset.asset;
@@ -320,14 +368,14 @@ const getUserAssets = asyncWrapper(async (req,res, next) => {
       const searchAsset = await Asset.findOne({_id: assetID})
 
       if (!searchAsset) {
-        return next(createCustomError(`No Asset found with id : ${assetID}`, 404));
+        return next(createCustomError(`No Asset found with id : ${assetID}`, 200));
       }
 
       const userID = searchUserAsset.user;
       const searchUser = await User.findOne({_id: userID})
 
       if (!searchUser) {
-        return next(createCustomError(`No user found with id : ${userID}`, 404));
+        return next(createCustomError(`No user found with id : ${userID}`, 200));
       }
 
       assetDetails.push({

@@ -1,6 +1,7 @@
 const User = require("../models/User");
 const asyncWrapper = require("../middleware/async");
 const { createCustomError } = require("../errors/customError");
+const mongoose = require('mongoose');
 
 
 // GET all users
@@ -12,14 +13,22 @@ const getAllUsers = asyncWrapper(async (req, res) => {
 
   //GET a User
 const getUser = asyncWrapper(async (req, res, next) => {
+ 
     const { id: userID } = req.params;
-    const user = await User.findOne({ _id: userID });
-  
-    if (!user) {
-      return next(createCustomError(`No user found with id : ${userID}`, 404));
+    if (!mongoose.Types.ObjectId.isValid(userID)) {
+      return next(createCustomError("Invalid Id format", 200));
     }
+      
+   const user = await User.findOne({ _id: userID });
+
+    if (!user) {
+      return next(createCustomError(`No user found with id : ${userID}`, 200));
+    }
+   
+   
+    
   
-    res.status(200).json({ user });
+   res.status(200).json({ user });
   });
 
 
@@ -27,6 +36,11 @@ const getUser = asyncWrapper(async (req, res, next) => {
 
 const updateUser = asyncWrapper(async (req, res, next) => {
     const { id: requestedUserId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(userID)) {
+      return next(createCustomError("Invalid Id format", 200));
+    }
+
     let searchUser = await User.findOne({ _id: requestedUserId });
 
     const userId = req.user.id; // User ID from JWT token
@@ -53,6 +67,11 @@ const updateUser = asyncWrapper(async (req, res, next) => {
 
 const deleteUser = asyncWrapper(async (req, res, next) => {
     const { id: userID } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(userID)) {
+      return next(createCustomError("Invalid Id format", 200));
+    }
+
     let searchUser = await User.findOne({ _id: userID });
    
     if (!searchUser) {
@@ -66,6 +85,11 @@ const deleteUser = asyncWrapper(async (req, res, next) => {
 
   const verifyUser = asyncWrapper(async (req, res, next) => {
     const { id: userID } = req.params;
+    
+    if (!mongoose.Types.ObjectId.isValid(userID)) {
+      return next(createCustomError("Invalid Id format", 200));
+    }
+
     let searchUser = await User.findOne({ _id: userID });
 
     if (!searchUser) {
