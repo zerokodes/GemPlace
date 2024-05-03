@@ -21,6 +21,6 @@ router.route("/:id").get(authenticateUser,getUserAsset).patch(authenticateUser, 
 router.route("/shareUserAsset").post(authenticateUser, shareUserAsset);
 router.route("/convertFromUsdt/:id").patch(authenticateUser,usdtToAsset);
 router.route("/convertToUsdt/:id").patch(authenticateUser,assetToUsdt);
-router.route("/allUserAssets").get(authenticateUser, getUserAssets);
+router.route("/allUserAssets/:id").get(authenticateUser, getUserAssets);
 
 module.exports = router;
