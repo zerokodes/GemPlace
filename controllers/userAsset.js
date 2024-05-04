@@ -185,7 +185,13 @@ const deleteUserAsset = asyncWrapper(async (req, res, next) => {
         }); 
 
 
-        res.status(200).json({ searchUserAsset, otherUserAsset, asset, convertedValue });
+        const data = {
+          amount
+      }
+
+      res.status(200).json({success: true, message: "UserAsset Successfully Converted", data , code: 200})
+
+        //res.status(200).json({ searchUserAsset, otherUserAsset, asset, convertedValue });
 
         
     })
@@ -248,8 +254,13 @@ const deleteUserAsset = asyncWrapper(async (req, res, next) => {
         runValidators: true,
       }); 
 
+      const data = {
+        amount
+    }
 
-      res.status(200).json({ searchUserAsset, otherUserAsset });
+    res.status(200).json({success: true, message: "UserAsset Successfully converted", data , code: 200})
+
+     // res.status(200).json({ searchUserAsset, otherUserAsset });
 
       
   })
