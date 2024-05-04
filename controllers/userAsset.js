@@ -404,11 +404,11 @@ const getUserAssets = asyncWrapper(async (req,res, next) => {
         // Include other asset fields as needed
       });
     }
-    const responseData = {
-      data:{assetDetails}
+    const data = {
+      assetDetails
     }
     //res.status(200).json(assets)
-    res.status(200).json({success: true, responseData})
+    res.status(200).json({success: true, message: "Successful", data, code:200})
 
 })
 
