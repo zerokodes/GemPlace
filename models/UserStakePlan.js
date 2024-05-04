@@ -4,7 +4,7 @@ const {Schema} = require('mongoose');
 
 const UserStakePlanSchema = new mongoose.Schema(
     {
-        userAssetID: {
+        userAsset: {
             type: Schema.Types.ObjectId,
             ref: 'UserAsset',
             required: true

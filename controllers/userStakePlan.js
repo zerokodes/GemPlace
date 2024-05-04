@@ -3,13 +3,18 @@ const asyncWrapper = require("../middleware/async");
 const { createCustomError } = require("../errors/customError");
 const UserAsset = require("../models/UserAsset");
 const StakePlan = require("../models/StakePlan");
+const mongoose = require('mongoose');
 
 
 
 
 // CREATE a new UserStakePlan: Similar to staking
 const stake = asyncWrapper(async (req, res, next) => {
-    const { stakePlan, numOfDays, amount, userAssetID} = req.body;
+    const { stakePlanID, numOfDays, amount, userAssetID} = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(stakePlanID)) {
+      return next(createCustomError("Invalid Id format", 200));
+    }
     
 
     let userAsset = await UserAsset.findOne({ _id: userAssetID });
@@ -28,17 +33,17 @@ const stake = asyncWrapper(async (req, res, next) => {
       
 
     // Calculate the total amount to be returned
-    const searchStakePlan = await StakePlan.findById({_id: stakePlan});
+    const searchStakePlan = await StakePlan.findById({_id: stakePlanID});
 
     if (!searchStakePlan){
-        return next(createCustomError(`No stake plan found with id : ${stakePlan}`, 404));
+        return next(createCustomError(`No stake plan found with id : ${stakePlanID}`, 404));
     }
     const totalROI = searchStakePlan.ROIPerDay * numOfDays;
     const returnAmount = totalROI + amount;
 
     const newUserStakePlan = new UserStakePlan ({
-        userAssetID,
-        stakePlan,
+        userAsset: userAssetID,
+        stakePlan: stakePlanID,
         amount,
         numOfDays
       });
@@ -137,6 +142,11 @@ const getAllUserStakePlans = asyncWrapper(async (req, res) => {
 
 const deleteUserStakePlan = asyncWrapper(async (req, res, next) => {
     const { id: userStakePlanID } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(userStakePlanID)) {
+      return next(createCustomError("Invalid Id format", 200));
+    }
+
     let searchUserStakePlan = await UserStakePlan.findOne({ _id: userStakePlanID });
    
     if (!searchUserStakePlan) {

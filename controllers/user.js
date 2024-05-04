@@ -37,7 +37,7 @@ const getUser = asyncWrapper(async (req, res, next) => {
 const updateUser = asyncWrapper(async (req, res, next) => {
     const { id: requestedUserId } = req.params;
 
-    if (!mongoose.Types.ObjectId.isValid(userID)) {
+    if (!mongoose.Types.ObjectId.isValid(requestedUserId)) {
       return next(createCustomError("Invalid Id format", 200));
     }
 
@@ -48,11 +48,11 @@ const updateUser = asyncWrapper(async (req, res, next) => {
    
    
     if (!searchUser) {
-      return next(createCustomError(`No user found with id : ${requestedUserId}`, 404));
+      return next(createCustomError(`No user found with id : ${requestedUserId}`, 200));
     }
     
     if (userId !== requestedUserId && !isAdmin){
-      return next(createCustomError(`You can't modify this user: ${requestedUserId}`, 403));
+      return next(createCustomError(`You can't modify this user: ${requestedUserId}`, 200));
     }
     
     searchUser = await User.findOneAndUpdate({ _id: requestedUserId }, req.body, {
@@ -75,7 +75,7 @@ const deleteUser = asyncWrapper(async (req, res, next) => {
     let searchUser = await User.findOne({ _id: userID });
    
     if (!searchUser) {
-      return next(createCustomError(`No user found with id : ${userID}`, 404));
+      return next(createCustomError(`No user found with id : ${userID}`, 200));
     }
    
     searchUser = await User.findOneAndDelete({ _id: userID });
@@ -85,7 +85,7 @@ const deleteUser = asyncWrapper(async (req, res, next) => {
 
   const verifyUser = asyncWrapper(async (req, res, next) => {
     const { id: userID } = req.params;
-    
+
     if (!mongoose.Types.ObjectId.isValid(userID)) {
       return next(createCustomError("Invalid Id format", 200));
     }
@@ -93,7 +93,7 @@ const deleteUser = asyncWrapper(async (req, res, next) => {
     let searchUser = await User.findOne({ _id: userID });
 
     if (!searchUser) {
-      return next(createCustomError(`No user found with id : ${userID}`, 404));
+      return next(createCustomError(`No user found with id : ${userID}`, 200));
     }
 
     searchUser = await User.findOneAndUpdate({ _id: userID }, {kycVerified: true}, {

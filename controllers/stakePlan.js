@@ -2,6 +2,7 @@ const StakePlan = require("../models/StakePlan");
 const asyncWrapper = require("../middleware/async");
 const { createCustomError } = require("../errors/customError");
 const Asset = require("../models/Asset");
+const mongoose = require('mongoose');
 
 // CREATE a new Stake Plan
 const createStakePlan = asyncWrapper(async (req, res, next) => {
@@ -40,6 +41,11 @@ const getAllStakePlans = asyncWrapper(async (req, res) => {
    //GET a Stake Plan
 const getStakePlan = asyncWrapper(async (req, res, next) => {
     const { id: stakePlanID } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(stakePlanID)) {
+      return next(createCustomError("Invalid Id format", 200));
+    }
+
     const stakePlan = await StakePlan.findOne({ _id: stakePlanID });
   
     if (!stakePlan) {
@@ -55,6 +61,11 @@ const getStakePlan = asyncWrapper(async (req, res, next) => {
 
 const updateStakePlan = asyncWrapper(async (req, res, next) => {
     const { id: stakePlanID } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(stakePlanID)) {
+      return next(createCustomError("Invalid Id format", 200));
+    }
+
     let searchStakePlan = await StakePlan.findOne({ _id: stakePlanID });
    
     if (!searchStakePlan) {
@@ -73,6 +84,11 @@ const updateStakePlan = asyncWrapper(async (req, res, next) => {
 
 const deleteStakePlan = asyncWrapper(async (req, res, next) => {
     const { id: stakePlanID } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(stakePlanID)) {
+      return next(createCustomError("Invalid Id format", 200));
+    }
+
     let searchStakePlan = await StakePlan.findOne({ _id: stakePlanID });
    
     if (!searchStakePlan) {

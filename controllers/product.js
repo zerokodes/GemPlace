@@ -2,6 +2,7 @@ const Product = require("../models/Product");
 const User = require("../models/User");
 const asyncWrapper = require("../middleware/async");
 const { createCustomError } = require("../errors/customError");
+const mongoose = require('mongoose');
 
 
 // CREATE a new product
@@ -41,6 +42,11 @@ const getAllProducts = asyncWrapper(async (req, res) => {
    //GET a product
 const getProduct = asyncWrapper(async (req, res, next) => {
     const { id: productID } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(productID)) {
+      return next(createCustomError("Invalid Id format", 200));
+    }
+
     const product = await Product.findOne({ _id: productID });
   
     if (!product) {
@@ -55,6 +61,11 @@ const getProduct = asyncWrapper(async (req, res, next) => {
 
 const updateProduct = asyncWrapper(async (req, res, next) => {
     const { id: productID } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(productID)) {
+      return next(createCustomError("Invalid Id format", 200));
+    }
+
     let searchProduct = await Product.findOne({ _id: productID });
    
     if (!searchProduct) {
@@ -83,6 +94,11 @@ const updateProduct = asyncWrapper(async (req, res, next) => {
 
 const deleteProduct = asyncWrapper(async (req, res, next) => {
     const { id: productID } = req.params;
+    
+    if (!mongoose.Types.ObjectId.isValid(productID)) {
+      return next(createCustomError("Invalid Id format", 200));
+    }
+
     let searchProduct = await Product.findOne({ _id: productID });
    
     if (!searchProduct) {

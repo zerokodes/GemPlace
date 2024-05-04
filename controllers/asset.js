@@ -1,6 +1,7 @@
 const Asset = require("../models/Asset");
 const asyncWrapper = require("../middleware/async");
 const { createCustomError } = require("../errors/customError");
+const mongoose = require('mongoose');
 
 
 // CREATE a new Asset
@@ -38,6 +39,11 @@ const getAllAssets = asyncWrapper(async (req, res) => {
    //GET an Asset
 const getAsset = asyncWrapper(async (req, res, next) => {
     const { id: assetID } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(assetID)) {
+      return next(createCustomError("Invalid Id format", 200));
+    }
+
     const asset = await Asset.findOne({ _id: assetID });
   
     if (!asset) {
@@ -52,6 +58,11 @@ const getAsset = asyncWrapper(async (req, res, next) => {
 
 const updateAsset = asyncWrapper(async (req, res, next) => {
     const { id: assetID } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(assetID)) {
+      return next(createCustomError("Invalid Id format", 200));
+    }
+
     let searchAsset = await Asset.findOne({ _id: assetID });
    
     if (!searchAsset) {
@@ -69,6 +80,11 @@ const updateAsset = asyncWrapper(async (req, res, next) => {
 
 const deleteAsset = asyncWrapper(async (req, res, next) => {
     const { id: assetID } = req.params;
+    
+    if (!mongoose.Types.ObjectId.isValid(assetID)) {
+      return next(createCustomError("Invalid Id format", 200));
+    }
+
     let searchAsset = await Asset.findOne({ _id: assetID });
    
     if (!searchAsset) {
