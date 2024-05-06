@@ -26,7 +26,7 @@ const{
 app.use(express.json());
 require('dotenv').config();
 app.use(cors({
-  origin: [process.env.CORS_URL1, process.env.CORS_URL2]
+  origin: [process.env.CORS_URL1, process.env.CORS_URL2, process.env.CORS_URL3]
 }))
 
 

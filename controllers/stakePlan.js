@@ -6,7 +6,7 @@ const mongoose = require('mongoose');
 
 // CREATE a new Stake Plan
 const createStakePlan = asyncWrapper(async (req, res, next) => {
-    const {assetID, startDate, endDate} = req.body.asset
+    const {assetID,  ROIPerDay,} = req.body
 
     // Initialize an empty array to store stakePlan results
     let stakePlanDetails = [];
@@ -15,11 +15,13 @@ const createStakePlan = asyncWrapper(async (req, res, next) => {
       return next(createCustomError("Invalid Id format", 200));
     }
 
+    console.log("save")
+    //console.log(startDate, endDate)
     const newStakePlan = new StakePlan ({
-      ROIPerDay: req.body.ROIPerDay,
+      ROIPerDay,
       asset: assetID,
-      startDate,
-      endDate
+      //startDate,
+     // endDate
     });
 
    
@@ -34,7 +36,7 @@ const createStakePlan = asyncWrapper(async (req, res, next) => {
 
       asset.stakePlans.push(savedStakePlan);
       await asset.save();
-
+    console.log("push")
       stakePlanDetails.push({
         id: savedStakePlan._id,
         ROIPerDay: savedStakePlan.ROIPerDay,
@@ -43,8 +45,8 @@ const createStakePlan = asyncWrapper(async (req, res, next) => {
           assetName: asset.assetName,
           usdtEquivalent: asset.usdtEquivalent
         }],
-        startDate: startDate,
-        endDate: endDate
+        //startDate: startDate,
+        //endDate: endDate
         // Include other asset fields as needed
       });
 
