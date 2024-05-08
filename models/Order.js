@@ -8,7 +8,7 @@ const OrderSchema = new mongoose.Schema(
     totalPrice: {type: Number},
     paymentMethod: {
         type: String,
-        enum: ["User Token", "Direct USDT Transfer", "Bank Transfer"]
+        enum: ["user_token", "direct_usdt_transfer", "bank_transfer"]
     },
     status: {
         type: String,

@@ -28,7 +28,7 @@ const createOrder = asyncWrapper(async(req,res,next) => {
      }
 
     
-     if(paymentMethod === "User Token"){
+     if(paymentMethod === "user_token"){
         //const userAssetID = req.body
 
         if (!mongoose.Types.ObjectId.isValid(userAssetID)) {
