@@ -15,19 +15,23 @@ const stake = asyncWrapper(async (req, res, next) => {
     if (!mongoose.Types.ObjectId.isValid(stakePlanID)) {
       return next(createCustomError("Invalid Id format", 200));
     }
+
+    if (!mongoose.Types.ObjectId.isValid(userAssetID)) {
+      return next(createCustomError("Invalid Id format", 200));
+    }
     
 
     let userAsset = await UserAsset.findOne({ _id: userAssetID });
     if (!userAsset){
-        return next(createCustomError(`No userAsset found with id : ${userAssetID}`, 404));
+        return next(createCustomError(`No userAsset found with id : ${userAssetID}`, 200));
     }
 
     if(userAsset.user._id.toString() !== req.user.id){
-        return next(createCustomError(`UserAsset does not belong to this user`, 403)); 
+        return next(createCustomError(`UserAsset does not belong to this user`, 200)); 
     }
     
     if(amount > userAsset.currentBalance ){
-        return next(createCustomError(`Insufficient Balance`, 404));
+        return next(createCustomError(`Insufficient Balance`, 200));
       }
 
       
@@ -36,7 +40,7 @@ const stake = asyncWrapper(async (req, res, next) => {
     const searchStakePlan = await StakePlan.findById({_id: stakePlanID});
 
     if (!searchStakePlan){
-        return next(createCustomError(`No stake plan found with id : ${stakePlanID}`, 404));
+        return next(createCustomError(`No stake plan found with id : ${stakePlanID}`, 200));
     }
     const totalROI = searchStakePlan.ROIPerDay * numOfDays;
     const returnAmount = totalROI + amount;
@@ -68,9 +72,12 @@ const stake = asyncWrapper(async (req, res, next) => {
     searchStakePlan.userStakePlans.push(savedUserStakePlan);
       await searchStakePlan.save();
 
+      const data = {
+        amount
+      }
     
 
-    res.status(201).json({ savedUserStakePlan, userAsset});
+    res.status(200).json({success:true, message:"Staked successful", data, code:200});
   });
 
 
