@@ -6,6 +6,7 @@ const { createCustomError } = require("../errors/customError");
 const mongoose = require('mongoose');
 const admin = require('firebase-admin');
 const serviceAccount = require('../admin.json');
+const { getStorage, getDownloadURL } = require('firebase-admin/storage');
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
@@ -26,10 +27,18 @@ const createProduct = asyncWrapper(async (req, res) => {
   // Upload image to Firebase Storage
   await bucket.upload(req.file.path, { destination: imageUrl });
 
+  const fileRef = getStorage().bucket(process.env.BUCKET_URL).file(imageUrl);
+  console.log("download")
+  const downloadURL= await getDownloadURL(fileRef);
+      // Get the download URL of the uploaded image
+      //const [url] = await bucket.file(imageUrl).getSignedUrl({ action: 'read', expires: '03-09-2024' });
+
+
+      console.log("save")
     const newProduct = new Product ({
       productName: req.body.productName,
       price: req.body.price,
-      imageLink: imageUrl,
+      imageLink: downloadURL,
       productDesc: req.body.productDesc,
       color: req.body.color,
       //removed once Security layer is added
