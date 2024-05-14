@@ -1,17 +1,35 @@
+require('dotenv').config();
 const Product = require("../models/Product");
 const User = require("../models/User");
 const asyncWrapper = require("../middleware/async");
 const { createCustomError } = require("../errors/customError");
 const mongoose = require('mongoose');
+const admin = require('firebase-admin');
+const serviceAccount = require('../admin.json');
 
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+  storageBucket: process.env.BUCKET_URL,
+});
+
+const bucket = admin.storage().bucket();
 
 // CREATE a new product
 const createProduct = asyncWrapper(async (req, res) => {
 
+  if (!req.file) {
+    return next(createCustomError('No image uploaded', 200));
+  }
+
+  const imageUrl = `images/${req.file.originalname}`;
+
+  // Upload image to Firebase Storage
+  await bucket.upload(req.file.path, { destination: imageUrl });
+
     const newProduct = new Product ({
       productName: req.body.productName,
       price: req.body.price,
-      imageLink: req.body.imageLink,
+      imageLink: imageUrl,
       productDesc: req.body.productDesc,
       color: req.body.color,
       //removed once Security layer is added
@@ -94,7 +112,7 @@ const updateProduct = asyncWrapper(async (req, res, next) => {
 
 const deleteProduct = asyncWrapper(async (req, res, next) => {
     const { id: productID } = req.params;
-    
+
     if (!mongoose.Types.ObjectId.isValid(productID)) {
       return next(createCustomError("Invalid Id format", 200));
     }

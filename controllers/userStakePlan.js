@@ -3,6 +3,8 @@ const asyncWrapper = require("../middleware/async");
 const { createCustomError } = require("../errors/customError");
 const UserAsset = require("../models/UserAsset");
 const StakePlan = require("../models/StakePlan");
+const User = require("../models/User");
+const Asset = require("../models/Asset");
 const mongoose = require('mongoose');
 
 
@@ -12,11 +14,13 @@ const mongoose = require('mongoose');
 const stake = asyncWrapper(async (req, res, next) => {
     const { stakePlanID, numOfDays, amount, userAssetID} = req.body;
 
-    if (!mongoose.Types.ObjectId.isValid(stakePlanID)) {
+    console.log("first")
+    if (!mongoose.Types.ObjectId.isValid(userAssetID)) {
       return next(createCustomError("Invalid Id format", 200));
     }
 
-    if (!mongoose.Types.ObjectId.isValid(userAssetID)) {
+    console.log("second")
+    if (!mongoose.Types.ObjectId.isValid(stakePlanID)) {
       return next(createCustomError("Invalid Id format", 200));
     }
     
@@ -173,6 +177,99 @@ const deleteAllUserStakePlans = asyncWrapper(async (req, res) => {
   });
 
 
+  //get all userStakePlan belonging to a user 
+  const getUserStakePlans = asyncWrapper(async(req,res,next) =>{
+    const {id: userID } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(userID)) {
+      return next(createCustomError("Invalid Id format", 200));
+    }
+
+    let searchUser = await User.findOne({ _id: userID });
+
+    if (!searchUser) {
+      return next(createCustomError(`No user found with id : ${userID}`, 200));
+    }
+
+    //check if it is the same user making the request
+    if (searchUser._id.toString() !== req.user.id){
+      return next(createCustomError(`You can not perform this operation`, 200));
+    }
+
+    const userAssets = searchUser.userAssets;
+
+    // Initialize an empty array to store userStakePlan results
+    let userStakePlanDetails = [];
+
+     // Loop through the userStakePlan and save them in the userStakePlanResults array
+     for (const userAsset of userAssets) {
+      const  searchUserAsset = await UserAsset.findOne({_id: userAsset});
+
+      if(!searchUserAsset) {
+        return next(createCustomError(`No UserAsset found with id : ${userAsset}`, 200));
+      }
+
+      const assetID = searchUserAsset.asset;
+
+      const searchAsset = await Asset.findOne({_id: assetID})
+
+      if (!searchAsset) {
+        return next(createCustomError(`No Asset found with id : ${assetID}`, 200));
+      }
+
+
+      const userStakePlans = searchUserAsset.userStakePlans
+
+      for(const userStakePlan of userStakePlans){
+        const searchUserStakePlan = await UserStakePlan.findOne({_id: userStakePlan});
+
+        if(!searchUserStakePlan){
+          return next(createCustomError(`No UserStakePlan found with id : ${userStakePlan}`, 200));
+        }
+
+        const stakePlanID = searchUserStakePlan.stakePlan;
+
+        const searchStakePlan = await StakePlan.findOne({_id: stakePlanID})
+
+        if (!searchStakePlan) {
+          return next(createCustomError(`No StakePlan found with id : ${stakePlanID}`, 200));
+        }
+        console.log("push to array")
+        userStakePlanDetails.push({
+          userStakePlanID: searchUserStakePlan._id,
+          amount: searchUserStakePlan.amount,
+          numOfDays: searchUserStakePlan.numOfDays,
+          startDate: searchUserStakePlan.startDate,
+          endDate: searchUserStakePlan.endDate,
+          expectedReturnAmount: searchUserStakePlan.expectedReturnAmount,
+          stakePlanDetails: [{
+            stakePlanID: searchStakePlan._id,
+            ROIPerDay: searchStakePlan.ROIPerDay,
+
+          }],
+          userAssetDetails: [{
+            userAssetID: searchUserAsset._id,
+            currentBalance: searchUserAsset.currentBalance,
+            AssetDetails: [{
+              assetID: searchAsset._id,
+              assetName: searchAsset.assetName,
+              usdtEquivalent: searchAsset.usdtEquivalent
+            }],
+            UserDetails: [{
+              userID: searchUser._id,
+              email: searchUser.email
+            }],
+          }]
+        })
+      }
+     }
+
+     const data = {
+      userStakePlanDetails
+     }
+     res.status(200).json({success: true, message: "Successful", data, code:200})
+  })
+
 
 
 
@@ -182,4 +279,5 @@ const deleteAllUserStakePlans = asyncWrapper(async (req, res) => {
    getAllUserStakePlans,
    deleteUserStakePlan,
    deleteAllUserStakePlans,
+   getUserStakePlans,
   };

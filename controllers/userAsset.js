@@ -382,12 +382,12 @@ const getUserAssets = asyncWrapper(async (req,res, next) => {
         return next(createCustomError(`No Asset found with id : ${assetID}`, 200));
       }
 
-      const userID = searchUserAsset.user;
+     /** const userID = searchUserAsset.user;
       const searchUser = await User.findOne({_id: userID})
 
       if (!searchUser) {
         return next(createCustomError(`No user found with id : ${userID}`, 200));
-      }
+      }**/
 
       assetDetails.push({
         id: searchUserAsset._id,
