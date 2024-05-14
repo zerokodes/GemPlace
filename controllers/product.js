@@ -28,13 +28,11 @@ const createProduct = asyncWrapper(async (req, res) => {
   await bucket.upload(req.file.path, { destination: imageUrl });
 
   const fileRef = getStorage().bucket(process.env.BUCKET_URL).file(imageUrl);
-  console.log("download")
+  
+  // Get the download URL of the uploaded image
   const downloadURL= await getDownloadURL(fileRef);
-      // Get the download URL of the uploaded image
-      //const [url] = await bucket.file(imageUrl).getSignedUrl({ action: 'read', expires: '03-09-2024' });
+    
 
-
-      console.log("save")
     const newProduct = new Product ({
       productName: req.body.productName,
       price: req.body.price,
