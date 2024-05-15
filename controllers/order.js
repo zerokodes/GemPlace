@@ -24,7 +24,7 @@ const createOrder = asyncWrapper(async(req,res,next) => {
      // Validate Product
      const product = await Product.findById(productID);
      if (!product) {
-        return next(createCustomError(`No user found with id : ${productID}`, 200));
+        return next(createCustomError(`No product found with id : ${productID}`, 200));
      }
 
     
@@ -58,6 +58,10 @@ const createOrder = asyncWrapper(async(req,res,next) => {
         
         await newOrder.save();
 
+        //save to user
+        user.orders.push(newOrder);
+        await user.save();
+
         const data = {
             newOrder
         }
@@ -81,6 +85,11 @@ const createOrder = asyncWrapper(async(req,res,next) => {
         totalPrice,
         paymentMethod,
     });
+
+    //save to user
+    user.orders.push(newOrder);
+    await user.save();
+
     const data = {
         newOrder
     }
@@ -91,6 +100,53 @@ const createOrder = asyncWrapper(async(req,res,next) => {
 
 })
 
+//GET A USER ORDER HISTORY
+const orderHistory = asyncWrapper(async(req,res,next) => {
+    const { id: userID } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(userID)) {
+        return next(createCustomError("Invalid Id format", 200));
+      }
+    let searchUser = await User.findOne({ _id: userID });
+
+    //check if it is the same user making the request
+    if (searchUser._id.toString() !== req.user.id){
+        return next(createCustomError(`You can not perform this operation`, 200));
+      }
+    
+    const orders = searchUser.orders;
+
+    // Initialize an empty array to store order History results
+    let orderDetails = [];
+
+    for (const order of orders) {
+        const searchOrder = await Order.findOne({ _id: order });
+        if (!searchOrder){
+            return next(createCustomError(`No order found with id : ${order}`, 200));
+
+        }
+
+        orderDetails.push({
+            orderID: searchOrder._id,
+            totalPrice: searchOrder.totalPrice,
+            paymentMethod: searchOrder.paymentMethod,
+            status: searchOrder.status,
+            time: searchOrder.createdAt,
+            userDetails: {
+                userID: searchUser._id,
+                email: searchUser.email
+            }
+        })
+    }
+    
+    const data = {
+        orderDetails
+    }
+
+    res.status(200).json({success: true, message: "Successful", data, code:200})
+})
+
 module.exports = {
     createOrder,
+    orderHistory,
 }
