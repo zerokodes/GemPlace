@@ -139,6 +139,14 @@ const orderHistory = asyncWrapper(async(req,res,next) => {
         })
     }
     
+    const pageNumber = req.query.pageNumber || 1; // Default to page 1 if pageNumber is not provided
+    const pageSize = req.query.pageSize || 10; // Default page size to 10 if pageSize is not provided
+
+    const startIndex = (pageNumber - 1) * pageSize;
+    const endIndex = pageNumber * pageSize;
+
+    orderDetails.slice(startIndex, endIndex);
+
     const data = {
         orderDetails
     }

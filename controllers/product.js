@@ -59,7 +59,19 @@ const createProduct = asyncWrapper(async (req, res) => {
 
 // GET all products
 const getAllProducts = asyncWrapper(async (req, res) => {
-    const products = await Product.find({});
+
+  const pageNumber = req.query.pageNumber || 1; // Default to page 1 if pageNumber is not provided
+    const pageSize = req.query.pageSize || 10; // Default page size to 10 if pageSize is not provided
+
+  const limit = parseInt(pageSize); // Convert pageSize to a number
+    const skip = (parseInt(pageNumber) - 1) * limit; // Calculate skip based on pageNumber
+
+    // Query MongoDB for products with pagination
+    const products = await Product.find()
+      .skip(skip)
+      .limit(limit)
+      .exec();
+
     const data = {
       products
   }
