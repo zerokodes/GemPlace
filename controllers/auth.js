@@ -114,8 +114,50 @@ const verifyEmail = asyncWrapper(async (req,res,next) => {
     res.status(200).json({success: true, message: "Email is Successfully Verified", code:200});
 })
 
+const sendVerificationMail = asyncWrapper(async (req,res,next) => {
+
+  const email = req.body.email
+
+  const existingUserEmail = await User.findOne({ email: email });
+
+  if (!existingUserEmail) {
+    return next(createCustomError("Please enter the email address you used when registering", 200));
+  }
+
+  if (existingUserEmail.isVerified === true){
+    return next(createCustomError("Email address is verified already", 200));
+  }
+
+      // Create a nodemailer transporter
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST,
+  port: process.env.SMTP_PORT,
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS
+  }
+});
+
+// Generate verification token (you can use crypto or uuid package)
+const randomBytes = CryptoJS.lib.WordArray.random(16);
+const token = CryptoJS.enc.Hex.stringify(randomBytes);
+
+console.log("about to send")
+ // Send verification email
+ const mailOptions = {
+  from: process.env.SMTP_USER,
+  to: email,
+  subject: 'Verify Your Email Address',
+  text: `Click the link to verify your email address: ${process.env.BASE_URL}/verify/${token}`
+};
+await transporter.sendMail(mailOptions);
+
+return res.status(200).json({success: true, message: "Check your email for verification",code:200})
+  
+})
 module.exports = {
     createUser,
     loginUser,
     verifyEmail,
+    sendVerificationMail,
   };
