@@ -52,7 +52,7 @@ const createProduct = asyncWrapper(async (req, res) => {
         savedProduct
       }
 
-    res.status(201).json({success:true,message: "Product added Successfully", data, code:200 });
+    res.status(200).json({success:true,message: "Product added Successfully", data, code:200 });
   });
 
 

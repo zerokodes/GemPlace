@@ -14,11 +14,11 @@ const nodemailer = require('nodemailer');
   const existingUserEmail = await User.findOne({ email });
   const existingUserUsername = await User.findOne({ username });
   if (existingUserEmail) {
-    return res.status(400).json({ message: `User already exists with this Email: ${email}`  });
+    return res.status(200).json({ message: `User already exists with this Email: ${email}`  });
   }
   
   if (existingUserUsername){
-    return res.status(400).json({ message: `User already exists with this Username: ${username}` });
+    return res.status(200).json({ message: `User already exists with this Username: ${username}` });
   }
     const newUser = new User ({
       username,
@@ -56,7 +56,7 @@ const transporter = nodemailer.createTransport({
 };
 await transporter.sendMail(mailOptions);
 await newUser.save();
-res.status(201).json({ message: 'User registered successfully. Check your email for verification.'});
+res.status(200).json({ message: 'User registered successfully. Check your email for verification.'});
   });
 
   // LOGIN user
@@ -78,7 +78,11 @@ res.status(201).json({ message: 'User registered successfully. Check your email 
 
     // Check if user has verified email
     if (user.isVerified === false){
-      return next(createCustomError("Please verify your email address", 200));
+      //return next(createCustomError("Please verify your email address", 200));
+      const data = {
+        isVerified: user.isVerified
+      }
+      return res.status(200).json({success:false,message: "Please verify your email address", data, code:200 });
     }
 
     //Assigning token to users
