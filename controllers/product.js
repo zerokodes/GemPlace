@@ -18,14 +18,16 @@ const bucket = admin.storage().bucket();
 // CREATE a new product
 const createProduct = asyncWrapper(async (req, res) => {
 
-  if (!req.file) {
+  const image = req.file
+
+  if (!image) {
     return next(createCustomError('No image uploaded', 200));
   }
 
-  const imageUrl = `images/${req.file.originalname}`;
+  const imageUrl = `images/${image.originalname}`;
 
   // Upload image to Firebase Storage
-  await bucket.upload(req.file.path, { destination: imageUrl });
+  await bucket.upload(image.path, { destination: imageUrl });
 
   const fileRef = getStorage().bucket(process.env.BUCKET_URL).file(imageUrl);
   

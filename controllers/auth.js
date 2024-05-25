@@ -142,7 +142,6 @@ const transporter = nodemailer.createTransport({
 const randomBytes = CryptoJS.lib.WordArray.random(16);
 const token = CryptoJS.enc.Hex.stringify(randomBytes);
 
-console.log("about to send")
  // Send verification email
  const mailOptions = {
   from: process.env.SMTP_USER,

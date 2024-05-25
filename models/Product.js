@@ -3,13 +3,13 @@ const {Schema} = require('mongoose');
 
 const ProductSchema = new mongoose.Schema(
     {
-        productName: {type: String, required:[true, "Please input product name"]},
-        price: {type: Number, required:[true, "Please input product's price"]},
-        imageLink: {type: String, required:[true, "Please input product's image"]},
+        productName: {type: String},
+        price: {type: Number},
+        imageLink: {type: String},
         productDesc: {type: String, default: null},
         cut: {type: String, default: null},
         productCertLink: {type: String, default: null},
-        color: {type: String, required:[true, "Please input product's color"]},
+        color: {type: String},
         size: [
             {
                 weight: {type: Number, default: null},
