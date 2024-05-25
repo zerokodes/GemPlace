@@ -21,8 +21,6 @@ const createProduct = asyncWrapper(async (req, res, next) => {
   const image = req.file
 
  
-console.log("checking image")
-console.log(image)
   if (!image) {
     return next(createCustomError('No image uploaded', 200));
    
