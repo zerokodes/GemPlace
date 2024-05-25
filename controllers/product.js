@@ -16,12 +16,16 @@ admin.initializeApp({
 const bucket = admin.storage().bucket();
 
 // CREATE a new product
-const createProduct = asyncWrapper(async (req, res) => {
+const createProduct = asyncWrapper(async (req, res, next) => {
 
   const image = req.file
 
+ 
+console.log("checking image")
+console.log(image)
   if (!image) {
     return next(createCustomError('No image uploaded', 200));
+   
   }
 
   const imageUrl = `images/${image.originalname}`;
