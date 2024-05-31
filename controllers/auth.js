@@ -14,11 +14,11 @@ const nodemailer = require('nodemailer');
   const existingUserEmail = await User.findOne({ email });
   const existingUserUsername = await User.findOne({ username });
   if (existingUserEmail) {
-    return res.status(200).json({ message: `User already exists with this Email: ${email}`  });
+    return res.status(200).json({success: false, message: `User already exists with this Email: ${email}`, code: 200});
   }
   
   if (existingUserUsername){
-    return res.status(200).json({ message: `User already exists with this Username: ${username}` });
+    return res.status(200).json({success: false, message: `User already exists with this Username: ${username}` , code:200});
   }
     const newUser = new User ({
       username,
@@ -56,7 +56,7 @@ const transporter = nodemailer.createTransport({
 };
 await transporter.sendMail(mailOptions);
 await newUser.save();
-res.status(200).json({ message: 'User registered successfully. Check your email for verification.'});
+res.status(200).json({success: true, message: 'User registered successfully. Check your email for verification.', code: 200});
   });
 
   // LOGIN user

@@ -35,6 +35,8 @@ const createProduct = asyncWrapper(async (req, res, next) => {
   
   // Get the download URL of the uploaded image
   const downloadURL= await getDownloadURL(fileRef);
+
+
     
 
     const newProduct = new Product ({
