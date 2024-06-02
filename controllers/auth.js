@@ -154,9 +154,50 @@ await transporter.sendMail(mailOptions);
 return res.status(200).json({success: true, message: "Check your email for verification",code:200})
   
 })
+
+const sendForgotPasswordMail = asyncWrapper(async (req, res, next) => {
+  const email = req.body.email;
+  
+  const user = await User.findOne({email: email});
+
+  if (!user) {
+    return next(createCustomError("Please enter the email address you used when registering", 200));
+  }
+ 
+       // Create a nodemailer transporter
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST,
+  port: process.env.SMTP_PORT,
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS
+  }
+});
+
+// Generate verification token (you can use crypto or uuid package)
+const randomBytes = CryptoJS.lib.WordArray.random(16);
+const token = CryptoJS.enc.Hex.stringify(randomBytes);
+
+// Send verification email
+const mailOptions = {
+  from: process.env.SMTP_USER,
+  to: email,
+  subject: 'Password Reset',
+  text: `You are receiving this because you (or someone else) have requested the reset of the password for your account.\n\n
+  Please click on the following link, or paste this into your browser to complete the process:\n\n
+  ${process.env.BASE_URL2}/forgotPassword/${email}/${token}\n\n
+  If you did not request this, please ignore this email and your password will remain unchanged.\n`
+  //text: `Click the link to verify your email address: ${process.env.BASE_URL}/verify/${token}`
+};
+await transporter.sendMail(mailOptions);
+
+  res.status(200).json({success: true, message: 'Check your email for link to reset password', code: 200});
+})
 module.exports = {
     createUser,
     loginUser,
     verifyEmail,
     sendVerificationMail,
+    sendForgotPasswordMail,
+    
   };

@@ -55,7 +55,7 @@ const createStakePlan = asyncWrapper(async (req, res, next) => {
         stakePlanDetails
       }
 
-    res.status(200).json({sucess:true, message:"Stake Plan created successfully", data, code: 200});
+    res.status(200).json({success:true, message:"Stake Plan created successfully", data, code: 200});
   });
 
 

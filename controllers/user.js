@@ -1,7 +1,9 @@
+require('dotenv').config();
 const User = require("../models/User");
 const asyncWrapper = require("../middleware/async");
 const { createCustomError } = require("../errors/customError");
 const mongoose = require('mongoose');
+const CryptoJS = require("crypto-js");
 
 
 // GET all users
@@ -109,6 +111,36 @@ const deleteAllUsers = asyncWrapper(async (req, res) => {
   res.status(200).json({ users });
 });
 
+const resetPassword = asyncWrapper(async (req, res, next) => {
+  const { newPassword } = req.body;; 
+  const id = req.user.id;
+  
+  const user = await User.findOneAndUpdate({ _id: id }, {password: CryptoJS.AES.encrypt(
+    newPassword,
+    process.env.PASS_SEC
+    ).toString()}, {
+    new: true,
+    runValidators: true,
+  });
+ 
+  res.status(200).json({success: true, message: 'User password successfully updated', code: 200});
+})
+
+const setPassword = asyncWrapper(async (req, res, next) => {
+  const { newPassword ,email } = req.body;; 
+  
+  
+  const user = await User.findOneAndUpdate({ email: email }, {password: CryptoJS.AES.encrypt(
+    newPassword,
+    process.env.PASS_SEC
+    ).toString()}, {
+    new: true,
+    runValidators: true,
+  });
+ 
+  res.status(200).json({success: true, message: 'User password successfully updated', code: 200});
+})
+
 
   module.exports = {
     getAllUsers,
@@ -117,4 +149,6 @@ const deleteAllUsers = asyncWrapper(async (req, res) => {
     deleteUser,
     verifyUser,
     deleteAllUsers,
+    resetPassword,
+    setPassword
   };
