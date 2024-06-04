@@ -4,6 +4,7 @@ const asyncWrapper = require("../middleware/async");
 const { createCustomError } = require("../errors/customError");
 const mongoose = require('mongoose');
 const CryptoJS = require("crypto-js");
+const jwt = require("jsonwebtoken");
 
 
 // GET all users
@@ -127,8 +128,13 @@ const resetPassword = asyncWrapper(async (req, res, next) => {
 })
 
 const setPassword = asyncWrapper(async (req, res, next) => {
-  const { newPassword ,email } = req.body;; 
+  const { newPassword, token, email } = req.body;
   
+  // Decode the token to get the user id
+  jwt.verify(token, process.env.JWT_SEC, (err) =>{
+  if(err) return next(createCustomError('Invalid token or has expired', 200));
+  });
+
   
   const user = await User.findOneAndUpdate({ email: email }, {password: CryptoJS.AES.encrypt(
     newPassword,

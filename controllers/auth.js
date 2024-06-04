@@ -174,9 +174,17 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-// Generate verification token (you can use crypto or uuid package)
-const randomBytes = CryptoJS.lib.WordArray.random(16);
-const token = CryptoJS.enc.Hex.stringify(randomBytes);
+
+ //Assigning token to users
+ const token = jwt.sign({
+  id: user._id
+}, 
+process.env.JWT_SEC,
+{expiresIn: "1h"}
+);
+
+//const randomBytes = CryptoJS.lib.WordArray.random(16);
+//const token = CryptoJS.enc.Hex.stringify(randomBytes);
 
 // Send verification email
 const mailOptions = {
