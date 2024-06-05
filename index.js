@@ -9,10 +9,20 @@ const userAssetRoute = require("./routes/userAsset");
 const stakePlanRoute = require("./routes/stakePlan");
 const userStakePlanRoute = require("./routes/userStakePlan");
 const orderRoute = require("./routes/order");
+const vendorRequest = require("./routes/vendorRequest");
 const notFound = require("./middleware/notFound");
 const errorHandlerMiddleware = require("./middleware/errorHandler");
 const connectDB = require("./database/Connect");
-const cors = require('cors')
+const cors = require('cors');
+const admin = require('firebase-admin');
+const serviceAccount = require("./admin.json");
+//Initialize firebase
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+  storageBucket: process.env.BUCKET_URL,
+})
+
+
 
 
 const schedule = require('node-schedule');
@@ -41,6 +51,7 @@ app.use("/api/v1/userAssets", userAssetRoute);
 app.use("/api/v1/stakePlans", stakePlanRoute);
 app.use("/api/v1/userStakePlans", userStakePlanRoute);
 app.use("/api/v1/orders", orderRoute);
+app.use("/api/v1/vendorRequests", vendorRequest);
 
 
 //middleware

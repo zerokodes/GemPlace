@@ -5,15 +5,10 @@ const asyncWrapper = require("../middleware/async");
 const { createCustomError } = require("../errors/customError");
 const mongoose = require('mongoose');
 const admin = require('firebase-admin');
-const serviceAccount = require('../admin.json');
+//const serviceAccount = require("../admin.json");
 const { getStorage, getDownloadURL } = require('firebase-admin/storage');
 
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-  storageBucket: process.env.BUCKET_URL,
-});
 
-const bucket = admin.storage().bucket();
 
 // CREATE a new product
 const createProduct = asyncWrapper(async (req, res, next) => {
@@ -25,7 +20,7 @@ const createProduct = asyncWrapper(async (req, res, next) => {
     return next(createCustomError('No image uploaded', 200));
    
   }
-
+  const bucket = admin.storage().bucket();
   const imageUrl = `images/${image.originalname}`;
 
   // Upload image to Firebase Storage
