@@ -25,7 +25,7 @@ const VendorRequestSchema = new mongoose.Schema(
         },
         status: {
             type: String,
-            enum: ["Pending", "Success"],
+            enum: ["Pending", "Success", "Failed"],
             default: "Pending"
         },
         userID: {

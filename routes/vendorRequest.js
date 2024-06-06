@@ -6,6 +6,7 @@ const {
     createVendorRequest,
     getPendingVendorRequest,
     updateUserToVendor,
+    disapproveVendorRequest,
 } = require("../controllers/vendorRequest");
 
 
@@ -18,4 +19,5 @@ router.route("/createVendorRequest").post(authenticateUser, authorizeRole('Norma
 
 router.route("/pendingVendorRequest").get(authenticateUser, authorizeRole('Admin'), getPendingVendorRequest)
 router.route("/approveRequest/:id").patch(authenticateUser, authorizeRole('Admin'), updateUserToVendor);
+router.route("/disapproveRequest/:id").patch(authenticateUser, authorizeRole('Admin'), disapproveVendorRequest);
   module.exports = router;

@@ -201,6 +201,17 @@ await transporter.sendMail(mailOptions);
 
   res.status(200).json({success: true, message: 'Check your email for link to reset password', code: 200});
 })
+
+const validateEmailAndToken = asyncWrapper( async (req,res,next) => {
+  const { token, email } = req.body;
+
+  // Decode the token to get the user id
+  jwt.verify(token, process.env.JWT_SEC, (err) =>{
+    if(err) return next(createCustomError('Invalid token or has expired', 200));
+    });
+
+    
+})
 module.exports = {
     createUser,
     loginUser,

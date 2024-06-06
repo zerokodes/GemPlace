@@ -36,6 +36,7 @@ const createVendorRequest = asyncWrapper(async (req, res, next) => {
     const downloadUrl1 = await getDownloadURL(fileRef1);
     const downloadUrl2 = await getDownloadURL(fileRef2);
 
+
     const vendorRequest = new VendorRequest({
         firstName: firstName,
         lastName: lastName,
@@ -46,6 +47,13 @@ const createVendorRequest = asyncWrapper(async (req, res, next) => {
     });
 
     await vendorRequest.save();
+
+    const userID = req.user.id;
+    //Update vendorRequestStatus of user
+    const user = await User.findOneAndUpdate({_id: userID}, {vendorRequestStatus: 'Pending'},{
+        new: true,
+        runValidators: true,
+    });
 
     const data = {
         vendorRequest
@@ -88,15 +96,47 @@ const updateUserToVendor = asyncWrapper(async (req,res,next) => {
         runValidators: true, 
     });
 
-    user = await User.findOneAndUpdate({ _id: userID }, {role: 'Vendor'}, {
+    user = await User.findOneAndUpdate({ _id: userID }, {role: 'Vendor'},{vendorRequestStatus: 'Success'}, {
         new: true,
         runValidators: true,
     });
 
     res.status(200).json({success: true, message: 'Vendor Request Approved', code: 200});
 })
+
+const disapproveVendorRequest = asyncWrapper(async (req,res,next) => {
+    const {id: userID} = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(userID)) {
+        return next(createCustomError("Invalid id format", 200));
+    }
+
+    let user = await User.findOne({_id: userID});
+
+    if(!user) {
+        return next(createCustomError(`No user found wiith id: ${userID}`,200));
+    }
+
+    let vendorRequest = await VendorRequest.findOne({userID: userID})
+    if(!vendorRequest) {
+        return next(createCustomError("This user didn't place a request to become a vendor",200));
+    }
+
+    vendorRequest = await VendorRequest.findOneAndUpdate({userID: userID}, {status: 'Failed'}, {
+        new: true,
+        runValidators: true, 
+    });
+
+    user = await User.findOneAndUpdate({ _id: userID },{role: 'NormalUser'}, {vendorRequestStatus: 'Failed'}, {
+        new: true,
+        runValidators: true,
+    });
+
+    res.status(200).json({success: true, message: 'Vendor Request Failed', code: 200});
+})
 module.exports = {
     createVendorRequest,
     getPendingVendorRequest,
     updateUserToVendor,
+    disapproveVendorRequest,
 }

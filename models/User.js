@@ -49,6 +49,11 @@ const UserSchema = new mongoose.Schema(
             type: Schema.Types.ObjectId,
             ref: 'Order'
         }],
+        vendorRequestStatus: {
+            type: String,
+            enum: ['Null','Pending','Success','Failed'],
+            default: 'Null'
+        }
     },
     { timestamps: true}
 );
