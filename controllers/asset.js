@@ -1,4 +1,6 @@
 const Asset = require("../models/Asset");
+const User = require("../models/User");
+const UserAsset = require("../models/UserAsset");
 const asyncWrapper = require("../middleware/async");
 const { createCustomError } = require("../errors/customError");
 const mongoose = require('mongoose');
@@ -20,8 +22,34 @@ const createAsset = asyncWrapper(async (req, res) => {
       usdtEquivalent,
     });
     const savedAsset= await newAsset.save();
+    const data = {
+      savedAsset
+    }
 
-    res.status(201).json({message: "Asset created successfully"});
+    // Find all users
+    const users = await User.find();
+
+    // Create a user asset for each user
+    const userAssets = users.map(user => ({
+      user: user._id,
+      asset: newAsset._id
+    }));
+
+     // Insert user assets into the UserAsset collection
+     const createdUserAssets = await UserAsset.insertMany(userAssets);
+
+     // Update each user with the new user assets
+    for (const userAsset of createdUserAssets) {
+      await User.findByIdAndUpdate(userAsset.user, {
+        $push: { userAssets: userAsset._id }
+      });
+    }
+
+     // Update the asset with the created user assets
+     newAsset.userAssets = createdUserAssets.map(userAsset => userAsset._id);
+     await newAsset.save();
+
+    res.status(201).json({success:true, message: "Asset created successfully", data:data, code:200});
   });
 
 

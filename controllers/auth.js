@@ -75,6 +75,13 @@ await transporter.sendMail(mailOptions);
 
    // Save the user assets to the user
  newUser.userAssets = userAssets.map(userAsset => userAsset._id);
+ 
+  // Update each asset with the new user assets
+  for (const userAsset of createdUserAssets) {
+    await Asset.findByIdAndUpdate(userAsset.asset, {
+      $push: { userAssets: userAsset._id }
+    });
+  }
 
  await newUser.save();
 
