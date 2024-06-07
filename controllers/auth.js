@@ -54,6 +54,7 @@ const transporter = nodemailer.createTransport({
   subject: 'Verify Your Email Address',
   text: `Click the link to verify your email address: ${process.env.BASE_URL}/verify/${token}`
 };
+
 await transporter.sendMail(mailOptions);
 await newUser.save();
 res.status(200).json({success: true, message: 'User registered successfully. Check your email for verification.', code: 200});
@@ -210,7 +211,7 @@ const validateEmailAndToken = asyncWrapper( async (req,res,next) => {
     if(err) return next(createCustomError('Invalid token or has expired', 200));
     });
 
-    
+
 })
 module.exports = {
     createUser,

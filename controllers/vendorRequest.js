@@ -96,7 +96,7 @@ const updateUserToVendor = asyncWrapper(async (req,res,next) => {
         runValidators: true, 
     });
 
-    user = await User.findOneAndUpdate({ _id: userID }, {role: 'Vendor'},{vendorRequestStatus: 'Success'}, {
+    user = await User.findOneAndUpdate({ _id: userID }, {$set: {role: 'Vendor',vendorRequestStatus: 'Success'}}, {
         new: true,
         runValidators: true,
     });
@@ -127,7 +127,7 @@ const disapproveVendorRequest = asyncWrapper(async (req,res,next) => {
         runValidators: true, 
     });
 
-    user = await User.findOneAndUpdate({ _id: userID },{role: 'NormalUser'}, {vendorRequestStatus: 'Failed'}, {
+    user = await User.findOneAndUpdate({ _id: userID },{$set: {role: 'NormalUser',vendorRequestStatus: 'Failed'}}, {
         new: true,
         runValidators: true,
     });
