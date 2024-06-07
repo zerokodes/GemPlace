@@ -1,5 +1,7 @@
 require('dotenv').config();
 const User = require("../models/User");
+const Asset = require("../models/Asset");
+const UserAsset = require("../models/UserAsset");
 const asyncWrapper = require("../middleware/async");
 const { createCustomError } = require("../errors/customError");
 const CryptoJS = require("crypto-js");
@@ -55,8 +57,27 @@ const transporter = nodemailer.createTransport({
   text: `Click the link to verify your email address: ${process.env.BASE_URL}/verify/${token}`
 };
 
-await transporter.sendMail(mailOptions);
 await newUser.save();
+await transporter.sendMail(mailOptions);
+
+
+ // Find all assets
+ const assets = await Asset.find();
+
+   // Create a user asset for each asset
+   const userAssets = await UserAsset.insertMany(
+    assets.map(asset => ({
+      user: newUser._id,
+      asset: asset._id
+    }))
+  );
+
+
+   // Save the user assets to the user
+ newUser.userAssets = userAssets.map(userAsset => userAsset._id);
+
+ await newUser.save();
+
 res.status(200).json({success: true, message: 'User registered successfully. Check your email for verification.', code: 200});
   });
 
