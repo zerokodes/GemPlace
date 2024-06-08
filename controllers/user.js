@@ -9,8 +9,17 @@ const jwt = require("jsonwebtoken");
 
 // GET all users
 const getAllUsers = asyncWrapper(async (req, res) => {
-    const users = await User.find({});
-    res.status(200).json({ users });
+   // const users = await User.find({});
+
+    const users = await User.find().populate({
+      path: 'userAssets',
+      populate: {
+        path: 'asset',
+        model: 'Asset'
+      }
+    });
+
+    res.status(200).json({success: true, message: 'Fetch successful', data:users, code:200});
   });
 
 
@@ -22,7 +31,15 @@ const getUser = asyncWrapper(async (req, res, next) => {
       return next(createCustomError("Invalid Id format", 200));
     }
       
-   const user = await User.findOne({ _id: userID });
+   //const user = await User.findOne({ _id: userID });
+
+   const user = await User.findOne({_id: userID}).populate({
+    path: 'userAssets',
+    populate: {
+      path: 'asset',
+      model: 'Asset'
+    }
+  });
 
     if (!user) {
       return next(createCustomError(`No user found with id : ${userID}`, 200));
@@ -30,8 +47,7 @@ const getUser = asyncWrapper(async (req, res, next) => {
    
    
     
-  
-   res.status(200).json({ user });
+    res.status(200).json({success: true, message: 'Fetch successful', data:user, code:200});
   });
 
 
