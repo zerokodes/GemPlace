@@ -101,7 +101,11 @@ const topUpUserAsset = asyncWrapper(async (req, res, next) => {
       new: true,
       runValidators: true,
     });
-    res.status(200).json({ searchUserAsset });
+
+    const data = {
+      searchUserAsset
+    }
+    res.status(200).json({success: true, message: 'Top up Successful', data, code: 200 });
   });
 
 

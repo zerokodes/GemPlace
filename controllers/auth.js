@@ -206,11 +206,14 @@ const transporter = nodemailer.createTransport({
 
  //Assigning token to users
  const token = jwt.sign({
-  id: user._id
+  id: user._id,
+  email: user.email,
 }, 
 process.env.JWT_SEC,
 {expiresIn: "1h"}
 );
+
+console.log('Generated token payload:', jwt.decode(token)); // Log the payload
 
 //const randomBytes = CryptoJS.lib.WordArray.random(16);
 //const token = CryptoJS.enc.Hex.stringify(randomBytes);
@@ -234,11 +237,26 @@ await transporter.sendMail(mailOptions);
 const validateEmailAndToken = asyncWrapper( async (req,res,next) => {
   const { token, email } = req.body;
 
-  // Decode the token to get the user id
-  jwt.verify(token, process.env.JWT_SEC, (err) =>{
-    if(err) return next(createCustomError('Invalid token or has expired', 200));
+console.log("start")
+console.log('Generated token payload:', jwt.decode(token)); // Log the payload
+  
+  const check = jwt.verify(token, process.env.JWT_SEC, (err) =>{
+    if(err) return next(createCustomError('Invalid token or has expired 1', 200));
     });
+   //const check =  jwt.verify(token, process.env.JWT_SEC);
 
+
+   
+
+    const decoded = jwt.decode(token)
+    console.log('Decoded Token:', decoded)
+    //console.log(decoded.email)
+    if (!decoded || decoded.email !== email) {
+      return res.status(400).json({ message: 'Invalid token or email' });
+    }
+
+ 
+  res.status(200).json({success: true, message: 'Token and Email validation successful', code: 200});
 
 })
 module.exports = {
@@ -247,5 +265,5 @@ module.exports = {
     verifyEmail,
     sendVerificationMail,
     sendForgotPasswordMail,
-    
+    validateEmailAndToken,
   };
