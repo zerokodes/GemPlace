@@ -9,6 +9,7 @@ const userAssetRoute = require("./routes/userAsset");
 const stakePlanRoute = require("./routes/stakePlan");
 const userStakePlanRoute = require("./routes/userStakePlan");
 const orderRoute = require("./routes/order");
+const transactionRoute = require("./routes/transaction");
 const vendorRequest = require("./routes/vendorRequest");
 const notFound = require("./middleware/notFound");
 const errorHandlerMiddleware = require("./middleware/errorHandler");
@@ -51,6 +52,7 @@ app.use("/api/v1/userAssets", userAssetRoute);
 app.use("/api/v1/stakePlans", stakePlanRoute);
 app.use("/api/v1/userStakePlans", userStakePlanRoute);
 app.use("/api/v1/orders", orderRoute);
+app.use("/api/v1/transactions", transactionRoute);
 app.use("/api/v1/vendorRequests", vendorRequest);
 
 

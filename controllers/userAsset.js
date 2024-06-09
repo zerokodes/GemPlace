@@ -4,6 +4,7 @@ const { createCustomError } = require("../errors/customError");
 const User = require("../models/User");
 const Asset = require("../models/Asset");
 const mongoose = require('mongoose');
+const Transaction = require('../models/Transaction');
 
 
 // CREATE a new UserAsset: Similar to buying an asset
@@ -188,6 +189,19 @@ const deleteUserAsset = asyncWrapper(async (req, res, next) => {
           runValidators: true,
         }); 
 
+        //create a new Transaction document
+    const newTransaction = new Transaction({
+      type: 'swap',
+      swapperId: req.user.id,
+      assetIdFrom: searchUserAsset.asset._id,
+      assetIdTo: otherUserAsset.asset._id,
+      amountFrom: amount,
+      amountTo: convertedValue,
+      exchangeRate: asset.usdtEquivalent,
+      status: 'completed'
+  })
+
+  await newTransaction.save();
 
         const data = {
           amount
@@ -257,6 +271,20 @@ const deleteUserAsset = asyncWrapper(async (req, res, next) => {
         new: true,
         runValidators: true,
       }); 
+
+      //create a new Transaction document
+    const newTransaction = new Transaction({
+      type: 'swap',
+      swapperId: req.user.id,
+      assetIdFrom: searchUserAsset.asset._id,
+      assetIdTo: otherUserAsset.asset._id,
+      amountFrom: amount,
+      amountTo: convertedValue,
+      exchangeRate: asset.usdtEquivalent,
+      status: 'completed'
+  })
+
+  await newTransaction.save();
 
       const data = {
         amount
@@ -328,6 +356,19 @@ const deleteUserAsset = asyncWrapper(async (req, res, next) => {
           new: true,
           runValidators: true,
         });
+
+
+        //create a new Transaction document
+    const newTransaction = new Transaction({
+      type: 'share',
+      sharerId: req.user.id,
+      recipientId: receiverUserAsset.user._id,
+      assetId: senderUserAsset.asset._id,
+      amount,
+      status: 'completed'
+  })
+
+  await newTransaction.save();
 
         const data = {
           amount
