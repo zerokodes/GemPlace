@@ -113,8 +113,15 @@ const orderHistory = asyncWrapper(async(req,res,next) => {
     if (searchUser._id.toString() !== req.user.id){
         return next(createCustomError(`You can not perform this operation`, 200));
       }
+
     
-    const orders = searchUser.orders;
+    const orders = await Order.find({user: userID})
+    .populate('Product')
+    .populate('user')
+
+    let orderDetails = orders;
+    
+   /** const orders = searchUser.orders;
 
     // Initialize an empty array to store order History results
     let orderDetails = [];
@@ -137,7 +144,7 @@ const orderHistory = asyncWrapper(async(req,res,next) => {
                 email: searchUser.email
             }
         })
-    }
+    }**/
     
     const pageNumber = req.query.pageNumber || 1; // Default to page 1 if pageNumber is not provided
     const pageSize = req.query.pageSize || 10; // Default page size to 10 if pageSize is not provided

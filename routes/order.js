@@ -8,5 +8,5 @@ const {
 } = require("../controllers/order");
 
 router.route("/order").post(authenticateUser, createOrder);
-router.route("/transaction_history/:id").get(authenticateUser, orderHistory);
+router.route("/orderHistory/:id").get(authenticateUser, orderHistory);
 module.exports = router;

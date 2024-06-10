@@ -93,7 +93,74 @@ const getAllTransactionHistoryByIdForAUser = asyncWrapper(async (req,res,next) =
       res.status(200).json({success: true, message: "Fetch Successful", data: populatedTransactions, code:200})
 })
 
+const getAllPendingTransaction = asyncWrapper(async(req,res,next) => {
+    const transactions = await Transaction.find({status: 'pending'})
+
+       // Populate fields based on transaction type
+       const populatedTransactions = await Promise.all(transactions.map(async (transaction) => {
+        switch (transaction.type) {
+          case 'buy':
+            return await Transaction.findById(transaction._id)
+              .populate('buyerId')
+              .populate('assetId');
+            }
+        }));   
+        
+    if (!populatedTransactions || populatedTransactions.length === 0) {
+            return next(createCustomError(`No pending transactions`, 200));
+          }
+     res.status(200).json({success: true, message: "Fetch Successful", data: populatedTransactions, code:200});
+        
+      
+})
+
+//For Approving Buy Transaction: Changing Status to Completed
+const approveTransaction = asyncWrapper(async (req,res,next) => {
+    const { id: transactionId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(transactionId)) {
+        return next(createCustomError("Invalid id format", 200));
+    }
+
+    let transaction = Transaction.findOne({ _id: transactionId});
+
+    if(!transaction) {
+        return next(createCustomError(`No transaction found wiith id: ${transactionId}`,200));
+    }
+
+    transaction = await Transaction.findByIdAndUpdate({_id: transactionId }, {status: 'completed'},{
+        new: true,
+        runValidators: true,
+    });
+
+    res.status(200).json({success: true, message: 'Transaction Approved', code: 200}); 
+})
+
+//For disapproving Buy TRansaction: Changing status to failed
+const disapproveTransaction = asyncWrapper(async (req,res,next) => {
+    const { id: transactionId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(transactionId)) {
+        return next(createCustomError("Invalid id format", 200));
+    }
+
+    let transaction = Transaction.findOne({ _id: transactionId});
+
+    if(!transaction) {
+        return next(createCustomError(`No transaction found wiith id: ${transactionId}`,200));
+    }
+    transaction = await Transaction.findByIdAndUpdate({_id: transactionId }, {status: 'failed'},{
+        new: true,
+        runValidators: true,
+    });
+
+    res.status(200).json({success: true, message: 'Transaction Disapproved', code: 200}); 
+})
+
 module.exports = {
    createBuyTransaction,
    getAllTransactionHistoryByIdForAUser,
+   getAllPendingTransaction,
+   approveTransaction,
+   disapproveTransaction,
 }

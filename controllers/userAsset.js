@@ -88,9 +88,6 @@ const topUpUserAsset = asyncWrapper(async (req, res, next) => {
    
     let searchUserAsset = await UserAsset.findOne({ _id: userAssetID });
 
-    if (!mongoose.Types.ObjectId.isValid(userAssetID)) {
-      return next(createCustomError("Invalid Id format", 200));
-    }
    
     if (!searchUserAsset) {
       return next(createCustomError(`No UserAsset found with id : ${userAssetID}`, 200));
