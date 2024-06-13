@@ -116,7 +116,7 @@ const orderHistory = asyncWrapper(async(req,res,next) => {
 
     
     const orders = await Order.find({user: userID})
-    .populate('Product')
+    .populate('product')
     .populate('user')
 
     let orderDetails = orders;
@@ -151,13 +151,13 @@ const orderHistory = asyncWrapper(async(req,res,next) => {
 
     const startIndex = (pageNumber - 1) * pageSize;
     const endIndex = pageNumber * pageSize;
-
+    
     orderDetails.slice(startIndex, endIndex);
-
+    
     const data = {
         orderDetails
     }
-
+    
     res.status(200).json({success: true, message: "Successful", data, code:200})
 })
 
