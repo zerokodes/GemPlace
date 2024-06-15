@@ -217,7 +217,6 @@ console.log('Generated token payload:', jwt.decode(token)); // Log the payload
 
 //const randomBytes = CryptoJS.lib.WordArray.random(16);
 //const token = CryptoJS.enc.Hex.stringify(randomBytes);
-
 // Send verification email
 const mailOptions = {
   from: process.env.SMTP_USER,
@@ -225,7 +224,7 @@ const mailOptions = {
   subject: 'Password Reset',
   text: `You are receiving this because you (or someone else) have requested the reset of the password for your account.\n\n
   Please click on the following link, or paste this into your browser to complete the process:\n\n
-  ${process.env.BASE_URL2}/forgotPassword/${email}/${token}\n\n
+  ${process.env.BASE_URL2}/forgot-password/reset/${email}/${token}\n\n
   If you did not request this, please ignore this email and your password will remain unchanged.\n`
   //text: `Click the link to verify your email address: ${process.env.BASE_URL}/verify/${token}`
 };
