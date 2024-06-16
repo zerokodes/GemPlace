@@ -45,16 +45,27 @@ const transporter = nodemailer.createTransport({
 
 
  // Generate verification token (you can use crypto or uuid package)
- const randomBytes = CryptoJS.lib.WordArray.random(16);
- const token = CryptoJS.enc.Hex.stringify(randomBytes);
+ /**const randomBytes = CryptoJS.lib.WordArray.random(16);
+ const token = CryptoJS.enc.Hex.stringify(randomBytes);**/
 
  
+ // Generate a verification token
+//const token = jwt.sign({ email: email }, process.env.JWT_SEC, { expiresIn: '1d' });
+ //Assigning token to users
+ const token = jwt.sign({
+  email
+}, 
+process.env.JWT_SEC,
+{expiresIn: "3d"}
+);
+
+console.log(token)
  // Send verification email
  const mailOptions = {
   from: process.env.SMTP_USER,
   to: email,
   subject: 'Verify Your Email Address',
-  text: `Click the link to verify your email address: ${process.env.BASE_URL}/verify/${token}`
+  text: `Click the link to verify your email address: ${process.env.BASE_URL}/verify?token=${token}`
 };
 
 await newUser.save();
@@ -135,11 +146,45 @@ res.status(200).json({success: true, message: 'User registered successfully. Che
 
 
 const verifyEmail = asyncWrapper(async (req,res,next) => {
+    const { token } = req.query;
+
+    if (!token) {
+      return next(createCustomError("Token is required", 200));
+    }
+
+   jwt.verify(token, process.env.JWT_SEC, (err) =>{
+      if(err) return next(createCustomError('Invalid token or has expired', 200));
+    });
+
+    const decode = jwt.decode(token);
+    const { email } = decode;
+
+    
+     if (!email) {
+      return next(createCustomError("Invalid token", 200));
+    }
+
+
+     // Find the user by email
+     const user = await User.findOne({ email });
+
+     if (!user) {
+      return next(createCustomError("User not found", 200));
+    }
+
+    // Verify the email
+    if (user.isVerified) {
+      return next(createCustomError("Email is already verified", 200));
+    }
+
+    user.isVerified = true;
+    await user.save();
+
     // Find user by token and update isVerified field
-    const user = await User.findOneAndUpdate({ isVerified: false }, { isVerified: true });
+   /** const user = await User.findOneAndUpdate({ isVerified: false }, { isVerified: true });
     if (!user) {
       return next(createCustomError("User not found or already verified", 200));
-    }
+    }**/
     res.status(200).json({success: true, message: "Email is Successfully Verified", code:200});
 })
 
@@ -147,13 +192,13 @@ const sendVerificationMail = asyncWrapper(async (req,res,next) => {
 
   const email = req.body.email
 
-  const existingUserEmail = await User.findOne({ email: email });
+  const user = await User.findOne({ email: email });
 
-  if (!existingUserEmail) {
+  if (!user) {
     return next(createCustomError("Please enter the email address you used when registering", 200));
   }
 
-  if (existingUserEmail.isVerified === true){
+  if (user.isVerified === true){
     return next(createCustomError("Email address is verified already", 200));
   }
 
@@ -168,8 +213,11 @@ const transporter = nodemailer.createTransport({
 });
 
 // Generate verification token (you can use crypto or uuid package)
-const randomBytes = CryptoJS.lib.WordArray.random(16);
-const token = CryptoJS.enc.Hex.stringify(randomBytes);
+/**const randomBytes = CryptoJS.lib.WordArray.random(16);
+const token = CryptoJS.enc.Hex.stringify(randomBytes);**/
+
+// Generate a verification token
+const token = jwt.sign({ email: user.email }, process.env.JWT_SEC, { expiresIn: '1d' });
 
  // Send verification email
  const mailOptions = {
@@ -235,23 +283,17 @@ await transporter.sendMail(mailOptions);
 
 const validateEmailAndToken = asyncWrapper( async (req,res,next) => {
   const { token, email } = req.body;
-
-console.log("start")
-console.log('Generated token payload:', jwt.decode(token)); // Log the payload
   
-  const check = jwt.verify(token, process.env.JWT_SEC, (err) =>{
+   jwt.verify(token, process.env.JWT_SEC, (err) =>{
     if(err) return next(createCustomError('Invalid token or has expired 1', 200));
     });
    //const check =  jwt.verify(token, process.env.JWT_SEC);
 
 
-   
-
     const decoded = jwt.decode(token)
-    console.log('Decoded Token:', decoded)
-    //console.log(decoded.email)
-    if (!decoded || decoded.email !== email) {
-      return res.status(400).json({ message: 'Invalid token or email' });
+
+    if (decoded.email.toString() !== email) {
+      return next(createCustomError('Token does not belong to this mail', 200));
     }
 
  
