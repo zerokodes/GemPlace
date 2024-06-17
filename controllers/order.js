@@ -161,7 +161,36 @@ const orderHistory = asyncWrapper(async(req,res,next) => {
     res.status(200).json({success: true, message: "Successful", data, code:200})
 })
 
+// Get all order history for all users
+const getAllOrderHistory = asyncWrapper(async (req, res, next) => {
+    const pageNumber = req.query.pageNumber || 1; // Default to page 1 if pageNumber is not provided
+    const pageSize = req.query.pageSize || 10; // Default page size to 10 if pageSize is not provided
+
+    const limit = parseInt(pageSize); // Convert pageSize to a number
+    const skip = (parseInt(pageNumber) - 1) * limit; // Calculate skip based on pageNumber
+
+    // Query MongoDB for products with pagination
+    const orders = await Order.find()
+    .skip(skip)
+    .limit(limit)
+    .exec();
+
+    //Populate user and product fields 
+    const populatedOrders = await Promise.all(orders.map(async (order) => {
+        return await Order.findById(order._id)
+        .populate('product')
+        .populate('user');
+    }))
+
+    if (!populatedOrders || populatedOrders.length === 0) {
+        return next(createCustomError(`No orders placed yet`, 200));
+      }
+
+    res.status(200).json({status: true, message: "Fetch successful", data:populatedOrders, code:200});
+})
+
 module.exports = {
     createOrder,
     orderHistory,
+    getAllOrderHistory,
 }
