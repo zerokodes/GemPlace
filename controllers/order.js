@@ -189,8 +189,71 @@ const getAllOrderHistory = asyncWrapper(async (req, res, next) => {
     res.status(200).json({status: true, message: "Fetch successful", data:populatedOrders, code:200});
 })
 
+const getAllPendingOrder = asyncWrapper(async (req,res,next) => {
+    const orders = await Order.find({ status: 'Pending'});
+
+    //Populate user and product fields 
+    const populatedOrders = await Promise.all(orders.map(async (order) => {
+        return await Order.findById(order._id)
+        .populate('product')
+        .populate('user');
+    }));
+
+    if (!populatedOrders || populatedOrders.length === 0) {
+        return next(createCustomError(`No orders placed yet`, 200));
+      }
+
+    res.status(200).json({status: true, message: "Fetch successful", data:populatedOrders, code:200});
+})
+
+
+const approveOrder = asyncWrapper(async (req,res,next) => {
+    const { id: orderId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(orderId)) {
+        return next(createCustomError("Invalid id format", 200));
+    }
+
+    let order = Order.findOne({_id: orderId});
+
+    if(!order){
+        return next(createCustomError(`No order found wiith id: ${orderId}`,200)); 
+    }
+
+    order = await Order.findByIdAndUpdate({_id: orderId }, {status: 'Success'},{
+        new: true,
+        runValidators: true,
+    });
+
+    res.status(200).json({success: true, message: 'Order Approved', code: 200});
+})
+
+const disapproveOrder = asyncWrapper(async (req,res,next) => {
+    const { id: orderId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(orderId)) {
+        return next(createCustomError("Invalid id format", 200));
+    }
+
+    let order = Order.findOne({_id: orderId});
+
+    if(!order){
+        return next(createCustomError(`No order found wiith id: ${orderId}`,200)); 
+    }
+
+    order = await Order.findByIdAndUpdate({_id: orderId }, {status: 'Failed'},{
+        new: true,
+        runValidators: true,
+    });
+
+    res.status(200).json({success: true, message: 'Order Disapproved', code: 200});
+})
+
 module.exports = {
     createOrder,
     orderHistory,
     getAllOrderHistory,
+    getAllPendingOrder,
+    approveOrder,
+    disapproveOrder,
 }
