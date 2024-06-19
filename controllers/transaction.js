@@ -61,7 +61,7 @@ const getAllTransactionHistoryByIdForAUser = asyncWrapper(async (req,res,next) =
           { sharerId: userId },
           { recipientId: userId }
         ]
-      })
+      }).sort({ createdAt: -1 })
         // Populate fields based on transaction type
     const populatedTransactions = await Promise.all(transactions.map(async (transaction) => {
         switch (transaction.type) {
