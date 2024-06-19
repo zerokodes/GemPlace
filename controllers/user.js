@@ -1,10 +1,17 @@
 require('dotenv').config();
 const User = require("../models/User");
+const UserAsset = require("../models/UserAsset");
+const Asset = require("../models/Asset");
 const asyncWrapper = require("../middleware/async");
 const { createCustomError } = require("../errors/customError");
 const mongoose = require('mongoose');
 const CryptoJS = require("crypto-js");
 const jwt = require("jsonwebtoken");
+const UserStakePlan = require('../models/UserStakePlan');
+const StakePlan = require('../models/StakePlan');
+const Order = require('../models/Order');
+const Product = require('../models/Product');
+
 
 
 // GET all users
@@ -90,16 +97,65 @@ const deleteUser = asyncWrapper(async (req, res, next) => {
     if (!mongoose.Types.ObjectId.isValid(userID)) {
       return next(createCustomError("Invalid Id format", 200));
     }
+    console.log("start")
+    // Start a session and transaction
+    const session = await mongoose.startSession();
+    session.startTransaction();
 
-    let searchUser = await User.findOne({ _id: userID });
-   
-    if (!searchUser) {
-      return next(createCustomError(`No user found with id : ${userID}`, 200));
+    console.log("start2")
+    // Delete the User
+    const user = await User.findByIdAndDelete(userID).session(session);
+
+    console.log("start3")
+    if (!user) {
+      await session.abortTransaction();
+      session.endSession();
+      return next(createCustomError(`No User found with id : ${userID}`, 200));
     }
-   
-    searchUser = await User.findOneAndDelete({ _id: userID });
+
+    console.log("start4")
+    // Find all UserAssets associated with the user
+    const userAssets = await UserAsset.find({ user: userID }).session(session);
+
+    console.log("start5")
+    // Delete UserAssets and remove references from Asset documents
+    for (const userAsset of userAssets) {
+      // Remove the UserAsset reference from the Asset document
+      await Asset.updateMany(
+        { userAssets: userAsset._id },
+        { $pull: { userAssets: userAsset._id } }
+      ).session(session);
+
+
+      console.log("start6")
+      //delete userStakePlan associated with the userAsset
+      const userStakePlan = await UserStakePlan.findByIdAndDelete({userAsset: userAsset._id}).session(session);
+
+      console.log("start7")
+      // Remove the UserStakePlan reference from the StakePlan document
+      await StakePlan.updateMany(
+        { userStakePlans: userStakePlan._id},
+        { $pull: { userStakePlans: userStakePlan._id}}
+      ).session(session);
+
+      console.log("start8")
+      // Delete the UserAsset
+      await UserAsset.findByIdAndDelete(userAsset._id).session(session);
+    }
+
+    console.log("start9")
+    // Find all orders associated with the user and delete them
+     await Order.deleteMany({ user: userID }).session(session);
+
+     console.log("start")
+     // Find all products associated with the user and delete them
+     await Product.deleteMany({ user: userID }).session(session);
+
+     // Commit the transaction
+    await session.commitTransaction();
+    session.endSession();
   
-    res.status(200).json({ searchUser });
+    res.status(200).json({success: true, message: 'User and references deleted successfully', code:200 });
   });
 
   const verifyUser = asyncWrapper(async (req, res, next) => {

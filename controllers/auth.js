@@ -174,7 +174,8 @@ const verifyEmail = asyncWrapper(async (req,res,next) => {
 
     // Verify the email
     if (user.isVerified) {
-      return next(createCustomError("Email is already verified", 200));
+      const isVerified = true;
+      res.status(200).json({success: false, message: "Email is already verified",data:isVerified, code:200});
     }
 
     user.isVerified = true;

@@ -4,6 +4,8 @@ const UserAsset = require("../models/UserAsset");
 const asyncWrapper = require("../middleware/async");
 const { createCustomError } = require("../errors/customError");
 const mongoose = require('mongoose');
+const StakePlan = require("../models/StakePlan");
+const UserStakePlan = require("../models/UserStakePlan");
 
 
 // CREATE a new Asset
@@ -113,15 +115,49 @@ const deleteAsset = asyncWrapper(async (req, res, next) => {
       return next(createCustomError("Invalid Id format", 200));
     }
 
-    let searchAsset = await Asset.findOne({ _id: assetID });
-   
-    if (!searchAsset) {
-      return next(createCustomError(`No Asset found with id : ${assetID}`, 404));
+    // Start a session and transaction
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+     // Delete the asset
+    const asset = await Asset.findByIdAndDelete(assetID).session(session);
+
+    if (!asset) {
+      await session.abortTransaction();
+      session.endSession();
+      return next(createCustomError(`No Asset found with id : ${assetID}`, 200));
     }
-   
-    searchAsset = await Asset.findOneAndDelete({ _id: assetID });
-  
-    res.status(200).json({ searchAsset });
+
+
+    // Find all UserAssets associated with the asset
+    const userAssets = await UserAsset.find({ asset: assetID }).session(session);
+
+    // Delete UserAssets and remove references from User documents
+    for (const userAsset of userAssets) {
+      // Remove the UserAsset reference from the User document
+      await User.updateMany(
+        { userAssets: userAsset._id },
+        { $pull: { userAssets: userAsset._id } }
+      ).session(session);
+
+      // Delete the UserAsset
+      await UserAsset.findByIdAndDelete(userAsset._id).session(session);
+    }
+
+     // Find and delete StakePlans associated with the asset
+     const stakePlans = await StakePlan.find({ asset: assetID }).session(session);
+     for (const stakePlan of stakePlans) {
+      // Delete UserStakePlans associated with the StakePlan
+       await UserStakePlan.deleteMany({ stakePlan: stakePlan._id }).session(session);
+       // Delete the StakePlan
+       await StakePlan.findByIdAndDelete(stakePlan._id).session(session);
+     }
+
+    // Commit the transaction
+    await session.commitTransaction();
+    session.endSession();
+
+    res.status(200).json({success: true, message: 'Asset and references deleted successfully', code:200 });
   });
 
 

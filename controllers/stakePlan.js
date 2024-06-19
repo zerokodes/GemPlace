@@ -3,6 +3,8 @@ const asyncWrapper = require("../middleware/async");
 const { createCustomError } = require("../errors/customError");
 const Asset = require("../models/Asset");
 const mongoose = require('mongoose');
+const UserStakePlan = require("../models/UserStakePlan");
+const UserAsset = require("../models/UserAsset");
 
 // CREATE a new Stake Plan
 const createStakePlan = asyncWrapper(async (req, res, next) => {
@@ -178,18 +180,42 @@ const deleteStakePlan = asyncWrapper(async (req, res, next) => {
       return next(createCustomError("Invalid Id format", 200));
     }
 
-    let searchStakePlan = await StakePlan.findOne({ _id: stakePlanID });
-   
-    if (!searchStakePlan) {
-      return next(createCustomError(`No Stake Plan found with id : ${stakePlanID}`, 200));
+    // Start a session and transaction
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+     // Delete the StakePlan
+     const stakePlan = await StakePlan.findByIdAndDelete(stakePlanID).session(session);
+    
+     if (!stakePlan) {
+      await session.abortTransaction();
+      session.endSession();
+      return next(createCustomError(`No StakePlan found with id : ${stakePlanID}`, 200));
     }
-   
-    searchStakePlan = await StakePlan.findOneAndDelete({ _id: stakePlanID });
-  
-    const data = {
-      searchStakePlan
+
+    // Delete stakePlan and remove references from Asset documents
+    await Asset.updateOne(
+      {stakePlans: stakePlanID},
+      {$pull: {stakePlans: stakePlanID}}
+    ).session(session);
+
+    // Find all UserStakePlan associated with the StakePlan
+    const userStakePlans = await UserStakePlan.find({ stakePlan: stakePlanID }).session(session);
+
+    // Delete UserStakePlan and remove references from UserAsset documents
+    for (const userStakePlan of userStakePlans) {
+      // Remove the UserStakePlan reference from the UserAsset document
+      await UserAsset.updateMany(
+        { userStakePlans: userStakePlan._id },
+        { $pull: { userStakePlans: userStakePlan._id } }
+      ).session(session);
+
+
+      // Delete the UserStakePlan
+      await UserStakePlan.findByIdAndDelete(userStakePlan._id).session(session);
     }
-    res.status(200).json({success:true, message:"Delete Successful",data, code:200 });
+    
+    res.status(200).json({success: true, message: 'StakePlan and references deleted successfully', code:200 });
   });
 
       // Delete all Stake Plans
