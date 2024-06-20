@@ -203,6 +203,7 @@ const deleteStakePlan = asyncWrapper(async (req, res, next) => {
     const userStakePlans = await UserStakePlan.find({ stakePlan: stakePlanID }).session(session);
 
     // Delete UserStakePlan and remove references from UserAsset documents
+    if(userStakePlans.length > 0){
     for (const userStakePlan of userStakePlans) {
       // Remove the UserStakePlan reference from the UserAsset document
       await UserAsset.updateMany(
@@ -214,6 +215,10 @@ const deleteStakePlan = asyncWrapper(async (req, res, next) => {
       // Delete the UserStakePlan
       await UserStakePlan.findByIdAndDelete(userStakePlan._id).session(session);
     }
+  }
+  // Commit the transaction
+  await session.commitTransaction();
+  session.endSession();
     
     res.status(200).json({success: true, message: 'StakePlan and references deleted successfully', code:200 });
   });

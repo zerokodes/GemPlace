@@ -97,27 +97,27 @@ const deleteUser = asyncWrapper(async (req, res, next) => {
     if (!mongoose.Types.ObjectId.isValid(userID)) {
       return next(createCustomError("Invalid Id format", 200));
     }
-    console.log("start")
+   
     // Start a session and transaction
     const session = await mongoose.startSession();
     session.startTransaction();
 
-    console.log("start2")
+    
     // Delete the User
     const user = await User.findByIdAndDelete(userID).session(session);
 
-    console.log("start3")
+    
     if (!user) {
       await session.abortTransaction();
       session.endSession();
       return next(createCustomError(`No User found with id : ${userID}`, 200));
     }
 
-    console.log("start4")
+    
     // Find all UserAssets associated with the user
     const userAssets = await UserAsset.find({ user: userID }).session(session);
 
-    console.log("start5")
+    
     // Delete UserAssets and remove references from Asset documents
     for (const userAsset of userAssets) {
       // Remove the UserAsset reference from the Asset document
@@ -127,27 +127,32 @@ const deleteUser = asyncWrapper(async (req, res, next) => {
       ).session(session);
 
 
-      console.log("start6")
+      
       //delete userStakePlan associated with the userAsset
-      const userStakePlan = await UserStakePlan.findByIdAndDelete({userAsset: userAsset._id}).session(session);
+      const userStakePlan = await UserStakePlan.findOne({userAsset: userAsset._id}).session(session);
 
-      console.log("start7")
+      
       // Remove the UserStakePlan reference from the StakePlan document
+      if(userStakePlan !== null){
       await StakePlan.updateMany(
         { userStakePlans: userStakePlan._id},
         { $pull: { userStakePlans: userStakePlan._id}}
       ).session(session);
 
-      console.log("start8")
+       //Delete the UserStakePlan
+       await UserStakePlan.findByIdAndDelete(userStakePlan._id).session(session);
+    }
+      
+
       // Delete the UserAsset
       await UserAsset.findByIdAndDelete(userAsset._id).session(session);
     }
 
-    console.log("start9")
+    
     // Find all orders associated with the user and delete them
      await Order.deleteMany({ user: userID }).session(session);
 
-     console.log("start")
+     
      // Find all products associated with the user and delete them
      await Product.deleteMany({ user: userID }).session(session);
 

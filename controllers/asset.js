@@ -146,13 +146,20 @@ const deleteAsset = asyncWrapper(async (req, res, next) => {
 
      // Find and delete StakePlans associated with the asset
      const stakePlans = await StakePlan.find({ asset: assetID }).session(session);
+
+     if(stakePlans.length > 0){
      for (const stakePlan of stakePlans) {
+
+       // Find UserStakePlans associated with the StakePlan
+       const userStakePlans = await UserStakePlan.find({ stakePlan: stakePlan._id }).session(session);
       // Delete UserStakePlans associated with the StakePlan
+      if(userStakePlans.length > 0){
        await UserStakePlan.deleteMany({ stakePlan: stakePlan._id }).session(session);
+     }
        // Delete the StakePlan
        await StakePlan.findByIdAndDelete(stakePlan._id).session(session);
      }
-
+  }
     // Commit the transaction
     await session.commitTransaction();
     session.endSession();
