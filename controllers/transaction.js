@@ -80,6 +80,10 @@ const getAllTransactionHistoryByIdForAUser = asyncWrapper(async (req,res,next) =
               .populate('sharerId')
               .populate('recipientId')
               .populate('assetId');
+          case 'withdrawal':
+            return await Transaction.findById(transaction._id)
+              .populate('recipientId')
+              .populate('usdtUserAsset');
           default:
             return transaction;
         }
