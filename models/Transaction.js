@@ -3,7 +3,7 @@ const { Schema } = require('mongoose');
 
 const TransactionSchema = new mongoose.Schema(
     {
-        type: { type: String, required: true, enum: ['buy', 'swap', 'share']},
+        type: { type: String, required: true, enum: ['buy', 'swap', 'share', 'withdrawal']},
         timestamp: { type: Date, required: true, default: Date.now },
         status: { type: String, required: true, enum: ['pending', 'completed', 'failed'], default: 'pending' },
 
@@ -27,6 +27,11 @@ const TransactionSchema = new mongoose.Schema(
         sharerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
         recipientId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
         amount: { type: Number },
+
+        // Fields for USDT Withdrawal
+        usdtUserAsset: { type: mongoose.Schema.Types.ObjectId, ref: 'UserAsset'},
+        walletAddress: {type: String, required: true},
+        blockChainNetwork: {type: String, required: true}
     },
 )
 
