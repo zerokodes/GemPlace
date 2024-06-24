@@ -291,6 +291,24 @@ const disapproveWithdrawal = asyncWrapper(async(req,res,next) => {
   res.status(200).json({success: true, message: 'Withdrawal Disapproved', code: 200});
 })
 
+const getPendingWithdrawal = asyncWrapper(async(req,res,next) => {
+  const transactions = await Transaction.find({ type: 'withdrawal', status: 'pending' }).exec();
+    // Populate fields based on transaction type
+    const populatedTransactions = await Promise.all(transactions.map(async (transaction) => {
+      switch (transaction.type) {
+        case 'withdrawal':
+          return await Transaction.findById(transaction._id)
+            .populate('recipientId')
+            .populate('usdtUserAsset');
+          }
+      }));   
+      
+  if (!populatedTransactions || populatedTransactions.length === 0) {
+          return next(createCustomError(`No pending transactions`, 200));
+        }
+   res.status(200).json({success: true, message: "Fetch Successful", data: populatedTransactions, code:200});
+})
+
 
 module.exports = {
    createBuyTransaction,
@@ -300,5 +318,6 @@ module.exports = {
    disapproveTransaction,
    placeWithdrawalRequest,
    approveWithdrawal,
-   disapproveWithdrawal
+   disapproveWithdrawal,
+   getPendingWithdrawal
 }

@@ -11,6 +11,7 @@ const {
     placeWithdrawalRequest,
     approveWithdrawal,
     disapproveWithdrawal,
+    getPendingWithdrawal,
 } = require('../controllers/transaction')
 
 router.route('/createBuyTransaction').post(authenticateUser, createBuyTransaction)
@@ -21,4 +22,5 @@ router.route('/disapproveTransaction/:id').patch(authenticateUser,authorizeRole(
 router.route('/placeWithdrawal').post(authenticateUser, placeWithdrawalRequest);
 router.route('/approveWithdrawal/:id').patch(authenticateUser,authorizeRole('Admin'), approveWithdrawal)
 router.route('/disapproveWithdrawal/:id').patch(authenticateUser,authorizeRole('Admin'), disapproveWithdrawal)
+router.route('/pendingWithdrawal').get(authenticateUser, authorizeRole('Admin'), getPendingWithdrawal)
 module.exports = router;
