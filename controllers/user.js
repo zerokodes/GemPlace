@@ -84,8 +84,14 @@ const updateUser = asyncWrapper(async (req, res, next) => {
     searchUser = await User.findOneAndUpdate({ _id: requestedUserId }, req.body, {
       new: true,
       runValidators: true,
+    }).populate({
+      path: 'userAssets',
+      populate: {
+        path: 'asset',
+        model: 'Asset'
+      }
     });
-    res.status(200).json({ searchUser });
+    res.status(200).json({success: true, message: 'Profile data updated successful', data:searchUser, code:200});
   });
   
 
