@@ -1,10 +1,13 @@
 require('dotenv').config();
 const Product = require("../models/Product");
 const User = require("../models/User");
+const Asset = require("../models/Asset");
+const UserAsset = require("../models/UserAsset");
 const asyncWrapper = require("../middleware/async");
 const { createCustomError } = require("../errors/customError");
 const mongoose = require('mongoose');
 const admin = require('firebase-admin');
+const Commission = require('../models/Commission')
 //const serviceAccount = require("../admin.json");
 const { getStorage, getDownloadURL } = require('firebase-admin/storage');
 
@@ -32,17 +35,55 @@ const createProduct = asyncWrapper(async (req, res, next) => {
   const downloadURL= await getDownloadURL(fileRef);
 
 
-    
+    const { price, color, productName, productDesc} = req.body;
 
     const newProduct = new Product ({
-      productName: req.body.productName,
-      price: req.body.price,
+      productName,
+      price,
       imageLink: downloadURL,
-      productDesc: req.body.productDesc,
-      color: req.body.color,
+      productDesc,
+      color,
       //removed once Security layer is added
       user: req.user.id
     });
+
+    //Commission Handler
+    const commission = await Commission.findOne({commissionType: "Promotion"});
+
+    if(!commission){
+      return next(createCustomError(`No commission for promotion found`,200)); 
+   }
+
+   const commissionFeePercent = commission.fee;
+
+   const commissionFee = (commissionFeePercent/100)*price;
+
+   const userId = req.user.id;
+    const assetName = 'USDT';
+
+    // Find the asset with the given name
+    const asset = await Asset.findOne({ assetName });
+    if (!asset) {
+      return next(createCustomError(`No Asset found with this name : ${assetName}`, 200));
+  }
+
+  // Find the user asset with the asset ID and user ID
+  let userAsset = await UserAsset.findOne({ user:userId, asset: asset._id });
+  if (!userAsset) {
+    return res.status(404).json({ message: 'User asset not found' });
+  }
+
+  if(commissionFee > userAsset.currentBalance ){
+    return next(createCustomError(`Insufficient Balance, You will require a fee of ${commissionFee} to promote your product`, 200));
+  }
+
+  // Deduct commission fee from  userAsset balance
+  userAsset = await UserAsset.findOneAndUpdate({ _id: userAsset._id},{$inc: {currentBalance: -commissionFee}}, {
+    new: true,
+    runValidators: true,
+  });
+
+
     const savedProduct= await newProduct.save();
 
     const user = await User.findById({_id: savedProduct.user})
@@ -61,23 +102,20 @@ const createProduct = asyncWrapper(async (req, res, next) => {
 // GET all products
 const getAllProducts = asyncWrapper(async (req, res) => {
 
-  const pageNumber = req.query.pageNumber || 1; // Default to page 1 if pageNumber is not provided
+ /** const pageNumber = req.query.pageNumber || 1; // Default to page 1 if pageNumber is not provided
     const pageSize = req.query.pageSize || 10; // Default page size to 10 if pageSize is not provided
 
   const limit = parseInt(pageSize); // Convert pageSize to a number
-    const skip = (parseInt(pageNumber) - 1) * limit; // Calculate skip based on pageNumber
+    const skip = (parseInt(pageNumber) - 1) * limit;**/ // Calculate skip based on pageNumber
 
     // Query MongoDB for products with pagination
     const products = await Product.find()
-      .skip(skip)
+      /**.skip(skip)
       .limit(limit)
-      .exec();
+      .exec();**/
 
-    const data = {
-      products
-  }
-  res.status(200).json({ success: true, data });
-    //res.status(200).json({ products });
+  res.status(200).json({ success: true, message: 'Fetch successful', data: products, code:200 });
+    
   });
 
 
