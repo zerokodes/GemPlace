@@ -26,12 +26,12 @@ const TransactionSchema = new mongoose.Schema(
         // Fields for Token Sharing
         sharerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
         recipientId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-        amount: { type: Number },
+        //amount: { type: Number },
 
         // Fields for USDT Withdrawal
         usdtUserAsset: { type: mongoose.Schema.Types.ObjectId, ref: 'UserAsset'},
-        walletAddress: {type: String, required: true},
-        blockChainNetwork: {type: String, required: true}
+        walletAddress: {type: String},
+        blockChainNetwork: {type: String}
     },
 )
 

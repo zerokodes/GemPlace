@@ -37,6 +37,7 @@ const nodemailer = require('nodemailer');
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
   port: process.env.SMTP_PORT,
+  //service: 'Gmail',
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS
@@ -62,18 +63,18 @@ process.env.JWT_SEC,
 console.log(token)
  // Send verification email
  const mailOptions = {
-  from: process.env.SMTP_USER,
+  from: process.env.SMTP_USER2,
   to: email,
   subject: 'Verify Your Email Address',
   text: `Click the link to verify your email address: ${process.env.BASE_URL}/verify?token=${token}`
 };
 
-await newUser.save();
+//await newUser.save();
 await transporter.sendMail(mailOptions);
 
 
  // Find all assets
- const assets = await Asset.find();
+ /**const assets = await Asset.find();
 
    // Create a user asset for each asset
    const userAssets = await UserAsset.insertMany(
@@ -94,7 +95,7 @@ await transporter.sendMail(mailOptions);
     });
   }
 
- await newUser.save();
+ await newUser.save();**/
 
 res.status(200).json({success: true, message: 'User registered successfully. Check your email for verification.', code: 200});
   });

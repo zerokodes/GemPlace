@@ -5,6 +5,7 @@ const { createCustomError } = require("../errors/customError");
 const User = require("../models/User");
 const Asset = require("../models/Asset");
 const UserAsset = require('../models/UserAsset');
+const nodemailer = require('nodemailer');
 
 //Create a Buy Transaction
 const createBuyTransaction = asyncWrapper(async (req,res,next) => {
@@ -13,6 +14,16 @@ const createBuyTransaction = asyncWrapper(async (req,res,next) => {
     if (!mongoose.Types.ObjectId.isValid(buyerId) || !mongoose.Types.ObjectId.isValid(assetId)) {
         return next(createCustomError("Invalid Id format", 200));
     } 
+
+    // Create a nodemailer transporter
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: process.env.SMTP_PORT,
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS
+      }
+    });
 
     // Validate customer ID
     const user = await User.findById(buyerId);
@@ -35,6 +46,16 @@ const createBuyTransaction = asyncWrapper(async (req,res,next) => {
         price,
         totalCost
     })
+
+    // Send verification email
+    const mailOptions = {
+      from: process.env.SMTP_USER,
+      to: user.email,
+      subject: 'Deposit Request',
+      text: `Dear ${user.username}, you have successfully made a deposit request of ${amount} ${asset.assetName}, which amount to a total cost of ${totalCost} USD. Your account will be credited once admin confirms your payment, Thank you.`
+    };
+    
+    await transporter.sendMail(mailOptions);
 
     await newTransaction.save();
 
@@ -90,7 +111,8 @@ const getAllTransactionHistoryByIdForAUser = asyncWrapper(async (req,res,next) =
       }));
   
       if (!populatedTransactions || populatedTransactions.length === 0) {
-        return next(createCustomError(`No transactions found for this user ${userId}`, 200));
+        //return next(createCustomError(`No transactions found for this user ${userId}`, 200));
+        res.status(200).json({success: true, message: "No pending transactions", data, code:200});
       }
   
   
@@ -116,7 +138,8 @@ const getAllPendingTransaction = asyncWrapper(async(req,res,next) => {
         }));   
         
     if (!populatedTransactions || populatedTransactions.length === 0) {
-            return next(createCustomError(`No pending transactions`, 200));
+            //return next(createCustomError(`No pending transactions`, 200));
+            res.status(200).json({success: true, message: "No pending transactions", data, code:200});
           }
      res.status(200).json({success: true, message: "Fetch Successful", data: populatedTransactions, code:200});
         
@@ -136,6 +159,20 @@ const approveTransaction = asyncWrapper(async (req,res,next) => {
     if(!transaction) {
         return next(createCustomError(`No transaction found wiith id: ${transactionId}`,200));
     }
+
+    const userAsset = await UserAsset.findOne({asset: transaction.assetId});
+
+    if(!userAsset) {
+      return next(createCustomError(`No userAsset found wiith assetId: ${transaction.assetId}`,200));
+  }
+
+   //deposit amount into userAsset
+   const amount = transaction.amount
+   const userAsserId = userAsset._id
+   await UserAsset.findOneAndUpdate({ _id: userAsserId },{$inc: {currentBalance: amount}}, {
+     new: true,
+     runValidators: true,
+   });
 
     transaction = await Transaction.findByIdAndUpdate({_id: transactionId }, {status: 'completed'},{
         new: true,
@@ -174,6 +211,15 @@ if (!mongoose.Types.ObjectId.isValid(recipientId) || !mongoose.Types.ObjectId.is
     return next(createCustomError("Invalid id format", 200));
  }
 
+ // Create a nodemailer transporter
+ const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST,
+  port: process.env.SMTP_PORT,
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS
+  }
+});
 
  // Validate customer ID
  const user = await User.findById(recipientId);
@@ -210,6 +256,16 @@ if(amount > userAsset.currentBalance ){
   walletAddress,
   blockChainNetwork
 })
+
+// Send verification email
+const mailOptions = {
+  from: process.env.SMTP_USER,
+  to: user.email,
+  subject: 'Deposit Request',
+  text: `Dear ${user.username}, you have successfully made a withdrawal request of ${amount} ${asset.assetName}. Your account will be credited once admin approves your request, Thank you.`
+};
+
+await transporter.sendMail(mailOptions);
 
 await newTransaction.save();
 
