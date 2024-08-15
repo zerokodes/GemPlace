@@ -160,16 +160,16 @@ const approveTransaction = asyncWrapper(async (req,res,next) => {
         return next(createCustomError(`No transaction found wiith id: ${transactionId}`,200));
     }
 
-    const userAsset = await UserAsset.findOne({asset: transaction.assetId});
+    let userAsset = await UserAsset.findOne({asset: transaction.assetId, user: transaction.buyerId});
 
     if(!userAsset) {
-      return next(createCustomError(`No userAsset found wiith assetId: ${transaction.assetId}`,200));
+      return next(createCustomError(`No userAsset found wiith assetId: ${transaction.assetId} for userId: ${transaction.buyerId}`,200));
   }
 
    //deposit amount into userAsset
    const amount = transaction.amount
    const userAsserId = userAsset._id
-   await UserAsset.findOneAndUpdate({ _id: userAsserId },{$inc: {currentBalance: amount}}, {
+   userAsset = await UserAsset.findOneAndUpdate({ _id: userAsserId },{$inc: {currentBalance: amount}}, {
      new: true,
      runValidators: true,
    });
@@ -360,7 +360,8 @@ const getPendingWithdrawal = asyncWrapper(async(req,res,next) => {
       }));   
       
   if (!populatedTransactions || populatedTransactions.length === 0) {
-          return next(createCustomError(`No pending transactions`, 200));
+          //return next(createCustomError(`No pending transactions`, 200));
+          res.status(200).json({success: true, message: "No pending transactions", data, code:200});
         }
    res.status(200).json({success: true, message: "Fetch Successful", data: populatedTransactions, code:200});
 })
