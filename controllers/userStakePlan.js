@@ -46,12 +46,12 @@ const stake = asyncWrapper(async (req, res, next) => {
     if (!searchStakePlan){
         return next(createCustomError(`No stake plan found with id : ${stakePlanID}`, 200));
     }
-    const totalROI = searchStakePlan.ROIPerDay * numOfDays;
+    const totalROI = ((searchStakePlan.ROIPerDay / 100) * amount) * numOfDays;
     const returnAmount = totalROI + amount;
 
     const newUserStakePlan = new UserStakePlan ({
         userAsset: userAssetID,
-        stakePlan: stakePlanID,
+        stakePlan: stakePlanID,                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 
         amount,
         numOfDays
       });

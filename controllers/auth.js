@@ -69,12 +69,12 @@ console.log(token)
   text: `Click the link to verify your email address: ${process.env.BASE_URL}/verify?token=${token}`
 };
 
-//await newUser.save();
+await newUser.save();
 await transporter.sendMail(mailOptions);
 
 
  // Find all assets
- /**const assets = await Asset.find();
+ const assets = await Asset.find();
 
    // Create a user asset for each asset
    const userAssets = await UserAsset.insertMany(
@@ -95,7 +95,7 @@ await transporter.sendMail(mailOptions);
     });
   }
 
- await newUser.save();**/
+ await newUser.save();
 
 res.status(200).json({success: true, message: 'User registered successfully. Check your email for verification.', code: 200});
   });
