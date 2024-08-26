@@ -112,7 +112,7 @@ const getAllTransactionHistoryByIdForAUser = asyncWrapper(async (req,res,next) =
   
       if (!populatedTransactions || populatedTransactions.length === 0) {
         //return next(createCustomError(`No transactions found for this user ${userId}`, 200));
-        res.status(200).json({success: true, message: "No pending transactions", data, code:200});
+        res.status(200).json({success: true, message: "No pending transactions", data:populatedTransactions, code:200});
       }
   
   
