@@ -66,7 +66,7 @@ const createStakePlan = asyncWrapper(async (req, res, next) => {
 const getAllStakePlans = asyncWrapper(async (req, res,next) => {
     const stakePlans = await StakePlan.find({});
 
-    // Initialize an empty array to store asset results
+    // Initialize an empty array to store stakePlan results
     let stakePlanDetails = [];
 
     for(const stakePlan of stakePlans){

@@ -145,7 +145,16 @@ const stake = asyncWrapper(async (req, res, next) => {
 
     // GET all USER Stake Plan
 const getAllUserStakePlans = asyncWrapper(async (req, res) => {
-    const userStakePlans = await UserStakePlan.find({});
+    const userStakePlans = await UserStakePlan.find({})
+    .populate({
+      path: 'stakePlan',
+      populate: {
+        path: 'asset',
+        model: 'Asset',
+      },
+    });
+
+
     res.status(200).json({ userStakePlans });
   });
 
